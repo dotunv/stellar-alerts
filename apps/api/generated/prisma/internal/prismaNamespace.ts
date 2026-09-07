@@ -406,7 +406,13 @@ export const ModelName = {
   WebhookLog: 'WebhookLog',
   WebhookCircuitBreaker: 'WebhookCircuitBreaker',
   SorobanEventSnapshot: 'SorobanEventSnapshot',
-  SorobanContractSubscription: 'SorobanContractSubscription'
+  SorobanContractSubscription: 'SorobanContractSubscription',
+  MultisigTreasury: 'MultisigTreasury',
+  MultisigSignerWatcher: 'MultisigSignerWatcher',
+  PendingMultisigTransaction: 'PendingMultisigTransaction',
+  AnchorTransactionWatch: 'AnchorTransactionWatch',
+  DexSwapWatch: 'DexSwapWatch',
+  DexSwapEvent: 'DexSwapEvent'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -422,7 +428,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "wallet" | "ingestionCursor" | "payment" | "notificationPreference" | "webhook" | "webhookLog" | "webhookCircuitBreaker" | "sorobanEventSnapshot" | "sorobanContractSubscription"
+    modelProps: "user" | "wallet" | "ingestionCursor" | "payment" | "notificationPreference" | "webhook" | "webhookLog" | "webhookCircuitBreaker" | "sorobanEventSnapshot" | "sorobanContractSubscription" | "multisigTreasury" | "multisigSignerWatcher" | "pendingMultisigTransaction" | "anchorTransactionWatch" | "dexSwapWatch" | "dexSwapEvent"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1166,6 +1172,450 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    MultisigTreasury: {
+      payload: Prisma.$MultisigTreasuryPayload<ExtArgs>
+      fields: Prisma.MultisigTreasuryFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MultisigTreasuryFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigTreasuryPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MultisigTreasuryFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigTreasuryPayload>
+        }
+        findFirst: {
+          args: Prisma.MultisigTreasuryFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigTreasuryPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MultisigTreasuryFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigTreasuryPayload>
+        }
+        findMany: {
+          args: Prisma.MultisigTreasuryFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigTreasuryPayload>[]
+        }
+        create: {
+          args: Prisma.MultisigTreasuryCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigTreasuryPayload>
+        }
+        createMany: {
+          args: Prisma.MultisigTreasuryCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MultisigTreasuryCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigTreasuryPayload>[]
+        }
+        delete: {
+          args: Prisma.MultisigTreasuryDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigTreasuryPayload>
+        }
+        update: {
+          args: Prisma.MultisigTreasuryUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigTreasuryPayload>
+        }
+        deleteMany: {
+          args: Prisma.MultisigTreasuryDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MultisigTreasuryUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MultisigTreasuryUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigTreasuryPayload>[]
+        }
+        upsert: {
+          args: Prisma.MultisigTreasuryUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigTreasuryPayload>
+        }
+        aggregate: {
+          args: Prisma.MultisigTreasuryAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMultisigTreasury>
+        }
+        groupBy: {
+          args: Prisma.MultisigTreasuryGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MultisigTreasuryGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MultisigTreasuryCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MultisigTreasuryCountAggregateOutputType> | number
+        }
+      }
+    }
+    MultisigSignerWatcher: {
+      payload: Prisma.$MultisigSignerWatcherPayload<ExtArgs>
+      fields: Prisma.MultisigSignerWatcherFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MultisigSignerWatcherFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigSignerWatcherPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MultisigSignerWatcherFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigSignerWatcherPayload>
+        }
+        findFirst: {
+          args: Prisma.MultisigSignerWatcherFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigSignerWatcherPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MultisigSignerWatcherFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigSignerWatcherPayload>
+        }
+        findMany: {
+          args: Prisma.MultisigSignerWatcherFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigSignerWatcherPayload>[]
+        }
+        create: {
+          args: Prisma.MultisigSignerWatcherCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigSignerWatcherPayload>
+        }
+        createMany: {
+          args: Prisma.MultisigSignerWatcherCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MultisigSignerWatcherCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigSignerWatcherPayload>[]
+        }
+        delete: {
+          args: Prisma.MultisigSignerWatcherDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigSignerWatcherPayload>
+        }
+        update: {
+          args: Prisma.MultisigSignerWatcherUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigSignerWatcherPayload>
+        }
+        deleteMany: {
+          args: Prisma.MultisigSignerWatcherDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MultisigSignerWatcherUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MultisigSignerWatcherUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigSignerWatcherPayload>[]
+        }
+        upsert: {
+          args: Prisma.MultisigSignerWatcherUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MultisigSignerWatcherPayload>
+        }
+        aggregate: {
+          args: Prisma.MultisigSignerWatcherAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMultisigSignerWatcher>
+        }
+        groupBy: {
+          args: Prisma.MultisigSignerWatcherGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MultisigSignerWatcherGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MultisigSignerWatcherCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MultisigSignerWatcherCountAggregateOutputType> | number
+        }
+      }
+    }
+    PendingMultisigTransaction: {
+      payload: Prisma.$PendingMultisigTransactionPayload<ExtArgs>
+      fields: Prisma.PendingMultisigTransactionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PendingMultisigTransactionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingMultisigTransactionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PendingMultisigTransactionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingMultisigTransactionPayload>
+        }
+        findFirst: {
+          args: Prisma.PendingMultisigTransactionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingMultisigTransactionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PendingMultisigTransactionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingMultisigTransactionPayload>
+        }
+        findMany: {
+          args: Prisma.PendingMultisigTransactionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingMultisigTransactionPayload>[]
+        }
+        create: {
+          args: Prisma.PendingMultisigTransactionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingMultisigTransactionPayload>
+        }
+        createMany: {
+          args: Prisma.PendingMultisigTransactionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PendingMultisigTransactionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingMultisigTransactionPayload>[]
+        }
+        delete: {
+          args: Prisma.PendingMultisigTransactionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingMultisigTransactionPayload>
+        }
+        update: {
+          args: Prisma.PendingMultisigTransactionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingMultisigTransactionPayload>
+        }
+        deleteMany: {
+          args: Prisma.PendingMultisigTransactionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PendingMultisigTransactionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PendingMultisigTransactionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingMultisigTransactionPayload>[]
+        }
+        upsert: {
+          args: Prisma.PendingMultisigTransactionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingMultisigTransactionPayload>
+        }
+        aggregate: {
+          args: Prisma.PendingMultisigTransactionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePendingMultisigTransaction>
+        }
+        groupBy: {
+          args: Prisma.PendingMultisigTransactionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PendingMultisigTransactionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PendingMultisigTransactionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PendingMultisigTransactionCountAggregateOutputType> | number
+        }
+      }
+    }
+    AnchorTransactionWatch: {
+      payload: Prisma.$AnchorTransactionWatchPayload<ExtArgs>
+      fields: Prisma.AnchorTransactionWatchFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AnchorTransactionWatchFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnchorTransactionWatchPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AnchorTransactionWatchFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnchorTransactionWatchPayload>
+        }
+        findFirst: {
+          args: Prisma.AnchorTransactionWatchFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnchorTransactionWatchPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AnchorTransactionWatchFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnchorTransactionWatchPayload>
+        }
+        findMany: {
+          args: Prisma.AnchorTransactionWatchFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnchorTransactionWatchPayload>[]
+        }
+        create: {
+          args: Prisma.AnchorTransactionWatchCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnchorTransactionWatchPayload>
+        }
+        createMany: {
+          args: Prisma.AnchorTransactionWatchCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AnchorTransactionWatchCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnchorTransactionWatchPayload>[]
+        }
+        delete: {
+          args: Prisma.AnchorTransactionWatchDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnchorTransactionWatchPayload>
+        }
+        update: {
+          args: Prisma.AnchorTransactionWatchUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnchorTransactionWatchPayload>
+        }
+        deleteMany: {
+          args: Prisma.AnchorTransactionWatchDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AnchorTransactionWatchUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AnchorTransactionWatchUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnchorTransactionWatchPayload>[]
+        }
+        upsert: {
+          args: Prisma.AnchorTransactionWatchUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnchorTransactionWatchPayload>
+        }
+        aggregate: {
+          args: Prisma.AnchorTransactionWatchAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAnchorTransactionWatch>
+        }
+        groupBy: {
+          args: Prisma.AnchorTransactionWatchGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AnchorTransactionWatchGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AnchorTransactionWatchCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AnchorTransactionWatchCountAggregateOutputType> | number
+        }
+      }
+    }
+    DexSwapWatch: {
+      payload: Prisma.$DexSwapWatchPayload<ExtArgs>
+      fields: Prisma.DexSwapWatchFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DexSwapWatchFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapWatchPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DexSwapWatchFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapWatchPayload>
+        }
+        findFirst: {
+          args: Prisma.DexSwapWatchFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapWatchPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DexSwapWatchFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapWatchPayload>
+        }
+        findMany: {
+          args: Prisma.DexSwapWatchFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapWatchPayload>[]
+        }
+        create: {
+          args: Prisma.DexSwapWatchCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapWatchPayload>
+        }
+        createMany: {
+          args: Prisma.DexSwapWatchCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DexSwapWatchCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapWatchPayload>[]
+        }
+        delete: {
+          args: Prisma.DexSwapWatchDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapWatchPayload>
+        }
+        update: {
+          args: Prisma.DexSwapWatchUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapWatchPayload>
+        }
+        deleteMany: {
+          args: Prisma.DexSwapWatchDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DexSwapWatchUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DexSwapWatchUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapWatchPayload>[]
+        }
+        upsert: {
+          args: Prisma.DexSwapWatchUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapWatchPayload>
+        }
+        aggregate: {
+          args: Prisma.DexSwapWatchAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDexSwapWatch>
+        }
+        groupBy: {
+          args: Prisma.DexSwapWatchGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DexSwapWatchGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DexSwapWatchCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DexSwapWatchCountAggregateOutputType> | number
+        }
+      }
+    }
+    DexSwapEvent: {
+      payload: Prisma.$DexSwapEventPayload<ExtArgs>
+      fields: Prisma.DexSwapEventFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DexSwapEventFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapEventPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DexSwapEventFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapEventPayload>
+        }
+        findFirst: {
+          args: Prisma.DexSwapEventFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapEventPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DexSwapEventFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapEventPayload>
+        }
+        findMany: {
+          args: Prisma.DexSwapEventFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapEventPayload>[]
+        }
+        create: {
+          args: Prisma.DexSwapEventCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapEventPayload>
+        }
+        createMany: {
+          args: Prisma.DexSwapEventCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DexSwapEventCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapEventPayload>[]
+        }
+        delete: {
+          args: Prisma.DexSwapEventDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapEventPayload>
+        }
+        update: {
+          args: Prisma.DexSwapEventUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapEventPayload>
+        }
+        deleteMany: {
+          args: Prisma.DexSwapEventDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DexSwapEventUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DexSwapEventUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapEventPayload>[]
+        }
+        upsert: {
+          args: Prisma.DexSwapEventUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DexSwapEventPayload>
+        }
+        aggregate: {
+          args: Prisma.DexSwapEventAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDexSwapEvent>
+        }
+        groupBy: {
+          args: Prisma.DexSwapEventGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DexSwapEventGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DexSwapEventCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DexSwapEventCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1335,6 +1785,89 @@ export const SorobanContractSubscriptionScalarFieldEnum = {
 export type SorobanContractSubscriptionScalarFieldEnum = (typeof SorobanContractSubscriptionScalarFieldEnum)[keyof typeof SorobanContractSubscriptionScalarFieldEnum]
 
 
+export const MultisigTreasuryScalarFieldEnum = {
+  id: 'id',
+  publicKey: 'publicKey',
+  label: 'label',
+  thresholdLevel: 'thresholdLevel',
+  createdAt: 'createdAt'
+} as const
+
+export type MultisigTreasuryScalarFieldEnum = (typeof MultisigTreasuryScalarFieldEnum)[keyof typeof MultisigTreasuryScalarFieldEnum]
+
+
+export const MultisigSignerWatcherScalarFieldEnum = {
+  id: 'id',
+  treasuryId: 'treasuryId',
+  userId: 'userId',
+  signerPublicKey: 'signerPublicKey',
+  createdAt: 'createdAt'
+} as const
+
+export type MultisigSignerWatcherScalarFieldEnum = (typeof MultisigSignerWatcherScalarFieldEnum)[keyof typeof MultisigSignerWatcherScalarFieldEnum]
+
+
+export const PendingMultisigTransactionScalarFieldEnum = {
+  id: 'id',
+  treasuryId: 'treasuryId',
+  innerTxHash: 'innerTxHash',
+  envelopeXdr: 'envelopeXdr',
+  requiredThreshold: 'requiredThreshold',
+  collectedWeight: 'collectedWeight',
+  signedByJson: 'signedByJson',
+  notifiedJson: 'notifiedJson',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PendingMultisigTransactionScalarFieldEnum = (typeof PendingMultisigTransactionScalarFieldEnum)[keyof typeof PendingMultisigTransactionScalarFieldEnum]
+
+
+export const AnchorTransactionWatchScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  anchorEndpoint: 'anchorEndpoint',
+  anchorTxId: 'anchorTxId',
+  protocol: 'protocol',
+  lastKnownStatus: 'lastKnownStatus',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AnchorTransactionWatchScalarFieldEnum = (typeof AnchorTransactionWatchScalarFieldEnum)[keyof typeof AnchorTransactionWatchScalarFieldEnum]
+
+
+export const DexSwapWatchScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  poolContractId: 'poolContractId',
+  minAmountThreshold: 'minAmountThreshold',
+  minSlippagePercent: 'minSlippagePercent',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DexSwapWatchScalarFieldEnum = (typeof DexSwapWatchScalarFieldEnum)[keyof typeof DexSwapWatchScalarFieldEnum]
+
+
+export const DexSwapEventScalarFieldEnum = {
+  id: 'id',
+  poolContractId: 'poolContractId',
+  ledgerSeq: 'ledgerSeq',
+  txHash: 'txHash',
+  tokenInAddress: 'tokenInAddress',
+  tokenOutAddress: 'tokenOutAddress',
+  amountIn: 'amountIn',
+  amountOut: 'amountOut',
+  priceImpactPct: 'priceImpactPct',
+  createdAt: 'createdAt'
+} as const
+
+export type DexSwapEventScalarFieldEnum = (typeof DexSwapEventScalarFieldEnum)[keyof typeof DexSwapEventScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1349,6 +1882,13 @@ export const NullableJsonNullValueInput = {
 } as const
 
 export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -1633,6 +2173,12 @@ export type GlobalOmitConfig = {
   webhookCircuitBreaker?: Prisma.WebhookCircuitBreakerOmit
   sorobanEventSnapshot?: Prisma.SorobanEventSnapshotOmit
   sorobanContractSubscription?: Prisma.SorobanContractSubscriptionOmit
+  multisigTreasury?: Prisma.MultisigTreasuryOmit
+  multisigSignerWatcher?: Prisma.MultisigSignerWatcherOmit
+  pendingMultisigTransaction?: Prisma.PendingMultisigTransactionOmit
+  anchorTransactionWatch?: Prisma.AnchorTransactionWatchOmit
+  dexSwapWatch?: Prisma.DexSwapWatchOmit
+  dexSwapEvent?: Prisma.DexSwapEventOmit
 }
 
 /* Types for Logging */

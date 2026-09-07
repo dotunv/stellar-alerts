@@ -49,7 +49,6 @@ class MockWebSocket {
 
 describe('StellarAlertsSocket Client', () => {
   let StellarAlertsSocket: any;
-  let mockWs: MockWebSocket;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -58,8 +57,8 @@ describe('StellarAlertsSocket Client', () => {
     (global as any).WebSocket = MockWebSocket;
     
     // Dynamic import to get fresh module
-    const module = await import('./socket');
-    StellarAlertsSocket = module.StellarAlertsSocket;
+    const imported = await import('./socket');
+    StellarAlertsSocket = imported.StellarAlertsSocket;
   });
 
   afterEach(() => {
