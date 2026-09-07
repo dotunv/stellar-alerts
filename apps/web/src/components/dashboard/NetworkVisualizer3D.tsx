@@ -208,8 +208,8 @@ export const NetworkVisualizer3D: React.FC<NetworkVisualizer3DProps> = ({
         ) : mounted || typeof window !== 'undefined' ? (
           <Canvas
             camera={{ position: [0, 4, 16], fov: 55 }}
-            dpr={[1, 2]}
-            gl={{ antialias: true, alpha: true }}
+            dpr={[1, 1.5]}
+            gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
           >
             <StreamField scene={scene} />
           </Canvas>

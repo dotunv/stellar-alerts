@@ -39,14 +39,14 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd "pg_isready -U postgres -d stellar_alerts"
-          --health-interval 5s --health-timeout 5s --health-retries 10
+          --health-interval 5s --health-timeout 5s --health-retries 20
       redis:
         image: redis:7-alpine
         ports:
           - 6379:6379
         options: >-
           --health-cmd "redis-cli ping"
-          --health-interval 5s --health-timeout 5s --health-retries 10
+          --health-interval 5s --health-timeout 5s --health-retries 20
 
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/stellar_alerts?connection_limit=100
@@ -72,13 +72,40 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Sync database schema
+      - name: Sync database schema (wait + retry)
         working-directory: apps/api
-        # db push (not migrate deploy) targets this job's disposable Postgres
-        # service directly from schema.prisma — no persisted migration history
-        # to manage for a database that is destroyed at the end of the run.
+        # db push targets the job's disposable Postgres service. Wait for
+        # the service to accept connections and retry to avoid transient
+        # race conditions on shared runners.
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/stellar_alerts
         run: |
-          npx prisma db push
+          # Wait up to 60s for Postgres to accept connections
+          for i in $(seq 1 30); do
+            if nc -z localhost 5432 2>/dev/null; then
+              echo "Postgres port open."
+              break
+            fi
+            echo "Waiting for Postgres... ($i/30)"
+            sleep 2
+          done
+
+          # Retry prisma db push with exponential backoff (5 attempts).
+          # Prisma v7 does not support --skip-generate; generate is run as a
+          # separate step after the schema has been successfully pushed.
+          attempt=1
+          until [ $attempt -gt 5 ]; do
+            npx prisma db push --accept-data-loss && break
+            echo "prisma db push failed, retrying ($attempt/5)..."
+            sleep $((attempt * 2))
+            attempt=$((attempt + 1))
+          done
+
+          if [ $attempt -gt 5 ]; then
+            echo "::error::prisma db push failed after 5 attempts."
+            exit 1
+          fi
+
           npx prisma generate
 
       - name: Start API server

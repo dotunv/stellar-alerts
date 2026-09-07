@@ -746,3 +746,219 @@ export class FlashLoanDetector {
 
 export const flashLoanDetector = new FlashLoanDetector();
 
+export interface ParsedStakingRewardEvent {
+  contractId: string;
+  account: string;
+  rewardToken: string;
+  poolContractId: string;
+  amount: string;
+  rawAmount: bigint;
+  topic: string;
+  epoch?: number;
+  ledgerSeq?: number;
+  txHash?: string;
+}
+
+const STAKING_REWARD_TOPICS = new Set([
+  "distribute",
+  "reward",
+  "claim",
+  "emitted",
+  "emission",
+  "stake_reward",
+  "yield_distribution",
+  "reward_distributed",
+  "yield",
+  "reward_emission",
+  "staking_reward",
+]);
+
+/**
+ * Parses a raw Soroban RPC event into a staking / LP yield reward distribution event.
+ */
+export function parseStakingRewardEvent(event: any): ParsedStakingRewardEvent | null {
+  if (!event || !event.topic || event.topic.length === 0) {
+    return null;
+  }
+
+  const rawTopic = extractSwapTopicValue(event.topic[0]);
+  if (!rawTopic) return null;
+
+  const topicNormalized = rawTopic.toLowerCase();
+  if (!STAKING_REWARD_TOPICS.has(topicNormalized)) {
+    return null;
+  }
+
+  const value = event.value || event.data || {};
+  const contractId = event.contractId || "";
+
+  const account = asAddressString(
+    value.account ??
+      value.recipient ??
+      value.staker ??
+      value.user ??
+      value.to ??
+      (value.distribute && (value.distribute.account || value.distribute.recipient))
+  );
+
+  if (!account) return null;
+
+  const rewardToken = asAddressString(
+    value.reward_token ??
+      value.rewardToken ??
+      value.asset ??
+      value.token ??
+      value.reward_asset ??
+      value.rewardAsset ??
+      contractId
+  );
+
+  const poolContractId = asAddressString(
+    value.pool_contract_id ??
+      value.poolContractId ??
+      value.pool ??
+      value.lp_token ??
+      value.lpToken ??
+      value.staking_pool ??
+      contractId
+  );
+
+  const rawAmount = decodeScAmount(
+    value.amount ??
+      value.reward_amount ??
+      value.rewardAmount ??
+      value.yield ??
+      value.emission ??
+      value.reward_emission
+  );
+
+  if (rawAmount === null || rawAmount <= 0n) {
+    return null;
+  }
+
+  const epoch =
+    value.epoch !== undefined && value.epoch !== null && !Number.isNaN(Number(value.epoch))
+      ? Number(value.epoch)
+      : undefined;
+
+  return {
+    contractId,
+    account,
+    rewardToken,
+    poolContractId,
+    amount: formatTokenAmount(rawAmount),
+    rawAmount,
+    topic: topicNormalized,
+    epoch,
+    ledgerSeq: event.ledgerSeq || event.ledger,
+    txHash: event.txHash || event.transactionHash,
+  };
+}
+
+/**
+ * StakingRewardTracker aggregates cumulative LP yield emissions and staking reward distributions
+ * across Soroban liquidity pools per account.
+ */
+export class StakingRewardTracker {
+  private accountTotals = new Map<string, Map<string, bigint>>();
+  private poolTotals = new Map<string, bigint>();
+
+  /**
+   * Aggregates a single parsed reward event into cumulative tracker state.
+   */
+  processRewardEvent(event: ParsedStakingRewardEvent): {
+    accountCumulativeAmount: string;
+    poolCumulativeAmount: string;
+  } {
+    const { account, rewardToken, poolContractId, rawAmount } = event;
+
+    // Account cumulative total
+    if (!this.accountTotals.has(account)) {
+      this.accountTotals.set(account, new Map());
+    }
+    const tokenMap = this.accountTotals.get(account)!;
+    const currentAccountTotal = tokenMap.get(rewardToken) || 0n;
+    const newAccountTotal = currentAccountTotal + rawAmount;
+    tokenMap.set(rewardToken, newAccountTotal);
+
+    // Pool-specific account total
+    const poolKey = `${account}:${poolContractId}:${rewardToken}`;
+    const currentPoolTotal = this.poolTotals.get(poolKey) || 0n;
+    const newPoolTotal = currentPoolTotal + rawAmount;
+    this.poolTotals.set(poolKey, newPoolTotal);
+
+    return {
+      accountCumulativeAmount: formatTokenAmount(newAccountTotal),
+      poolCumulativeAmount: formatTokenAmount(newPoolTotal),
+    };
+  }
+
+  /**
+   * Processes a batch of raw Soroban RPC events, parsing reward events and aggregating yield emissions.
+   */
+  processEventBatch(events: any[]): {
+    event: ParsedStakingRewardEvent;
+    accountCumulativeAmount: string;
+    poolCumulativeAmount: string;
+  }[] {
+    const results: {
+      event: ParsedStakingRewardEvent;
+      accountCumulativeAmount: string;
+      poolCumulativeAmount: string;
+    }[] = [];
+
+    for (const rawEvent of events) {
+      const parsed = parseStakingRewardEvent(rawEvent);
+      if (!parsed) continue;
+
+      const totals = this.processRewardEvent(parsed);
+      results.push({
+        event: parsed,
+        accountCumulativeAmount: totals.accountCumulativeAmount,
+        poolCumulativeAmount: totals.poolCumulativeAmount,
+      });
+    }
+
+    return results;
+  }
+
+  /**
+   * Gets cumulative yield emission for a specific account and reward token.
+   */
+  getCumulativeYield(account: string, rewardToken: string = "default"): string {
+    const tokenMap = this.accountTotals.get(account);
+    if (!tokenMap) return "0";
+
+    if (rewardToken === "default") {
+      let total = 0n;
+      for (const amount of tokenMap.values()) {
+        total += amount;
+      }
+      return formatTokenAmount(total);
+    }
+
+    const amount = tokenMap.get(rewardToken) || 0n;
+    return formatTokenAmount(amount);
+  }
+
+  /**
+   * Gets cumulative yield emission for an account within a specific pool and reward token.
+   */
+  getCumulativeYieldByPool(account: string, poolContractId: string, rewardToken: string): string {
+    const poolKey = `${account}:${poolContractId}:${rewardToken}`;
+    const amount = this.poolTotals.get(poolKey) || 0n;
+    return formatTokenAmount(amount);
+  }
+
+  /**
+   * Resets all accumulated yield metrics.
+   */
+  reset(): void {
+    this.accountTotals.clear();
+    this.poolTotals.clear();
+  }
+}
+
+export const stakingRewardTracker = new StakingRewardTracker();
+
+

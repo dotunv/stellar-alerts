@@ -66,7 +66,8 @@ export const ModelName = {
   PendingMultisigTransaction: 'PendingMultisigTransaction',
   AnchorTransactionWatch: 'AnchorTransactionWatch',
   DexSwapWatch: 'DexSwapWatch',
-  DexSwapEvent: 'DexSwapEvent'
+  DexSwapEvent: 'DexSwapEvent',
+  SecurityAuditLog: 'SecurityAuditLog'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -152,6 +153,7 @@ export const WebhookScalarFieldEnum = {
   userId: 'userId',
   url: 'url',
   secret: 'secret',
+  payloadTemplate: 'payloadTemplate',
   isActive: 'isActive',
   createdAt: 'createdAt'
 } as const
@@ -296,6 +298,21 @@ export const DexSwapEventScalarFieldEnum = {
 } as const
 
 export type DexSwapEventScalarFieldEnum = (typeof DexSwapEventScalarFieldEnum)[keyof typeof DexSwapEventScalarFieldEnum]
+
+
+export const SecurityAuditLogScalarFieldEnum = {
+  id: 'id',
+  eventType: 'eventType',
+  txHash: 'txHash',
+  topic: 'topic',
+  sequence: 'sequence',
+  contractId: 'contractId',
+  details: 'details',
+  severity: 'severity',
+  createdAt: 'createdAt'
+} as const
+
+export type SecurityAuditLogScalarFieldEnum = (typeof SecurityAuditLogScalarFieldEnum)[keyof typeof SecurityAuditLogScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -119,3 +119,8 @@ export type DexSwapWatch = Prisma.DexSwapWatchModel
  * 
  */
 export type DexSwapEvent = Prisma.DexSwapEventModel
+/**
+ * Model SecurityAuditLog
+ * 
+ */
+export type SecurityAuditLog = Prisma.SecurityAuditLogModel

@@ -102,7 +102,9 @@ export default function () {
 
 function safeJson(res, field) {
   try {
-    return res.json(field);
+    const body = typeof res?.json === 'function' ? res.json() : null;
+    if (!body || typeof body !== 'object') return undefined;
+    return Object.prototype.hasOwnProperty.call(body, field) ? body[field] : undefined;
   } catch {
     return undefined;
   }

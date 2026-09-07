@@ -62,6 +62,10 @@
             "type": "string",
             "maxLength": 2048,
             "format": "uri"
+          },
+          "payloadTemplate": {
+            "type": "string",
+            "maxLength": 16384
           }
         },
         "required": [

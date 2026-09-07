@@ -42,6 +42,7 @@ export default function Home() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
   const [totalVolumeXLM, setTotalVolumeXLM] = useState<number>(0);
   const [totalPaymentsCount, setTotalPaymentsCount] = useState<number>(0);
+  const [crossLedgerAnalytics, setCrossLedgerAnalytics] = useState<any>(null);
 
   // Helper to get auth headers
   const getHeaders = useCallback(() => {
@@ -108,15 +109,35 @@ export default function Home() {
     }
   }, [session, getHeaders]);
 
+  // Fetch cross ledger analytics
+  const fetchCrossLedgerAnalytics = useCallback(async () => {
+    if (!session) return;
+    try {
+      const url = selectedWalletId
+        ? `http://localhost:3001/payments/analytics/cross-ledger?walletId=${encodeURIComponent(selectedWalletId)}`
+        : 'http://localhost:3001/payments/analytics/cross-ledger';
+      const res = await fetch(url, { headers: getHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.analytics) {
+          setCrossLedgerAnalytics(data.analytics);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch cross ledger analytics:', err);
+    }
+  }, [session, selectedWalletId, getHeaders]);
+
   useEffect(() => {
     if (!session) return;
     const timer = window.setTimeout(() => {
       void fetchWallets();
       void fetchPayments();
       void fetchSummary();
+      void fetchCrossLedgerAnalytics();
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [session, selectedWalletId, fetchWallets, fetchPayments, fetchSummary]);
+  }, [session, selectedWalletId, fetchWallets, fetchPayments, fetchSummary, fetchCrossLedgerAnalytics]);
 
   const handleRemoveWallet = async (id: string) => {
     try {
@@ -318,6 +339,7 @@ export default function Home() {
                     totalPaymentsCount={totalPaymentsCount || payments.length}
                     totalVolumeXLM={totalVolumeXLM}
                     activeWalletsCount={wallets.length}
+                    crossLedgerAnalytics={crossLedgerAnalytics}
                   />
                 ),
               },

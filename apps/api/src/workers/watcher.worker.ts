@@ -12,8 +12,38 @@ import {
 import { withWalletLock } from '../lib/lock';
 import { shouldAlert, PaymentContext } from '../lib/rules-engine';
 import { MemoryMonitor, MemorySnapshot } from '../utils/memory-monitor';
+import { nonceAuditManager } from '../utils/nonce-audit';
 
 
+let memoryMonitor: MemoryMonitor | null = null;
+
+/**
+ * Stops the memory monitor and exits the process so WorkerSupervisor
+ * respawns it cleanly. process.exit is deferred a turn via setImmediate so
+ * the log line above it actually flushes before the process goes down.
+ */
+export function gracefulRestart(reason: string, snapshot: MemorySnapshot): void {
+  console.error(
+    `[WatcherWorker] 🔁 Restarting worker: ${reason} (heap usage ${(snapshot.usageRatio * 100).toFixed(1)}%)`,
+  );
+  memoryMonitor?.stop();
+  setImmediate(() => {
+    process.exit(1);
+  });
+}
+
+export function startMemoryMonitor(): MemoryMonitor {
+  memoryMonitor = new MemoryMonitor({
+    onRestartRequired: (snapshot) => gracefulRestart('memory usage exceeded restart threshold', snapshot),
+    onCleanup: (snapshot, gcRan) => {
+      console.log(
+        `[WatcherWorker] 🧹 Ran memory cleanup pass at ${(snapshot.usageRatio * 100).toFixed(1)}% heap usage (gc ran: ${gcRan})`,
+      );
+    },
+  });
+  memoryMonitor.start();
+  return memoryMonitor;
+}
 
 /**
  * Replies to the supervisor's IPC pings so the worker is not considered
@@ -255,85 +285,59 @@ export async function startHorizonSSEStream(wallet: { id: string; publicKey: str
   }
 }
 
-let memoryMonitor: MemoryMonitor | null = null;
-
 /**
- * Logs the reason, stops the memory monitor's own timer, and exits the
- * process so the supervisor (workers/supervisor.ts) respawns it fresh with
- * a clean heap — a controlled exit chosen before the OS OOM-kills the
- * process mid-request, not an uncontrolled crash.
+ * Runs a single payment-catchup + Soroban-event poll cycle. Any error from
+ * a wallet/contract fetch (a chaos-injected network fault, a dropped DB
+ * connection, Horizon timing out, ...) is caught here rather than left to
+ * propagate — this is what keeps a transient upstream fault from becoming
+ * an unhandled rejection that crashes the process; the next scheduled poll
+ * simply tries again. Exported separately from runWatcher so this exact
+ * fault-tolerance behavior is directly unit-testable —
+ * see __tests__/chaos.test.ts.
  */
-export function gracefulRestart(reason: string, snapshot: MemorySnapshot): void {
-  console.error(
-    `[WatcherWorker] 💥 Initiating graceful restart: ${reason} ` +
-      `(heap ${(snapshot.usageRatio * 100).toFixed(1)}%, ${Math.round(snapshot.heapUsed / 1024 / 1024)}MB used)`,
-  );
-  memoryMonitor?.stop();
-  // setImmediate gives the error log above a turn of the event loop to
-  // flush to stdout/stderr before the process exits.
-  setImmediate(() => process.exit(1));
-}
-
-export function startMemoryMonitor(): MemoryMonitor {
-  const monitor = new MemoryMonitor({
-    onCleanup: (snapshot, gcRan) => {
-      console.warn(
-        `[WatcherWorker] Heap cleanup pass ${gcRan ? "ran" : "skipped (start with --expose-gc to enable it)"} ` +
-          `at ${(snapshot.usageRatio * 100).toFixed(1)}% usage.`,
+export async function pollOnce(): Promise<void> {
+  try {
+    const wallets = await prisma.wallet.findMany();
+    if (wallets.length === 0) {
+      console.log(
+        "[WatcherWorker] No wallets registered in DB to watch. Waiting for next poll...",
       );
-    },
-    onRestartRequired: (snapshot) => gracefulRestart("sustained high heap usage", snapshot),
-  });
-  monitor.start();
-  memoryMonitor = monitor;
-  return monitor;
+      return;
+    }
+
+    console.log(
+      `[WatcherWorker] Checking ${wallets.length} registered wallet(s)...`,
+    );
+    for (const wallet of wallets) {
+      await processWalletPayments({ id: wallet.id, publicKey: wallet.publicKey, userId: wallet.userId });
+    }
+
+    // Process multi-contract Soroban events
+    const contractIds = getActiveContractIds();
+    if (contractIds.length > 0) {
+      console.log(
+        `[WatcherWorker] Processing ${contractIds.length} Soroban contract subscriptions...`,
+      );
+      for (const contractId of contractIds) {
+        await processSorobanContractEvents(contractId);
+      }
+    }
+  } catch (error) {
+    console.error("[WatcherWorker] Polling error:", error);
+  }
 }
 
 export async function runWatcher() {
   console.log("[WatcherWorker] 🚀 Starting Stellar Testnet Watcher Worker...");
 
-  startMemoryMonitor();
-
   // Load Soroban contract subscriptions
   await loadContractRegistry();
 
-  const poll = async () => {
-    try {
-      const wallets = await prisma.wallet.findMany();
-      if (wallets.length === 0) {
-        console.log(
-          "[WatcherWorker] No wallets registered in DB to watch. Waiting for next poll...",
-        );
-        return;
-      }
-
-      console.log(
-        `[WatcherWorker] Checking ${wallets.length} registered wallet(s)...`,
-      );
-      for (const wallet of wallets) {
-        await processWalletPayments({ id: wallet.id, publicKey: wallet.publicKey, userId: wallet.userId });
-      }
-
-      // Process multi-contract Soroban events
-      const contractIds = getActiveContractIds();
-      if (contractIds.length > 0) {
-        console.log(
-          `[WatcherWorker] Processing ${contractIds.length} Soroban contract subscriptions...`,
-        );
-        for (const contractId of contractIds) {
-          await processSorobanContractEvents(contractId);
-        }
-      }
-    } catch (error) {
-      console.error("[WatcherWorker] Polling error:", error);
-    }
-  };
-
   // Initial payment catchup run
-  await poll();
+  await pollOnce();
 
   // Schedule periodic catchup poll every 30 seconds
-  setInterval(poll, 30000);
+  setInterval(pollOnce, 30000);
 
   // Reload contract registry every 5 minutes
   setInterval(() => {
@@ -368,7 +372,32 @@ async function processSorobanContractEvents(contractId: string) {
         const parsed = parseSacTransferEvent(event);
         if (!parsed) continue;
 
+        const txHash = event.txHash || event.transactionHash || event.transaction_hash || event.hash || (event as any).id || '';
+        const topic = (parsed as any).topic || (Array.isArray(event.topic) ? event.topic[0] : event.topic) || 'transfer';
+        const sequence = (parsed as any).ledgerSeq || event.ledgerSeq || event.ledger || event.pagingToken || startLedger;
+
+        // Replay Guard: Audit txHash + topic sequence pair against Redis cache
+        const isValidNonce = await nonceAuditManager.validateAndRecordNonce({
+          txHash,
+          topic,
+          sequence,
+          contractId,
+          details: {
+            from: parsed.from,
+            to: parsed.to,
+            amount: parsed.amount,
+          },
+        });
+
+        if (!isValidNonce) {
+          console.warn(
+            `[SorobanRouter] 🛡️ Event replay guard rejected replayed event (topic: ${topic}, txHash: ${txHash}, sequence: ${sequence})`,
+          );
+          continue;
+        }
+
         const routes = routeEventToUsers(event);
+
 
         for (const route of routes) {
           console.log(
@@ -416,5 +445,6 @@ async function processSorobanContractEvents(contractId: string) {
 
 if (require.main === module) {
   registerSupervisorHeartbeat();
+  startMemoryMonitor();
   runWatcher();
 }

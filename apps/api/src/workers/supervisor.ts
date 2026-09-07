@@ -135,6 +135,10 @@ export function startSupervisor(): WorkerSupervisor {
     supervisor.spawn('soroban-rent', 'soroban-rent.worker');
   }
 
+  if (env.SOROBAN_STAKING_REWARD_WORKER_ENABLED === 'true') {
+    supervisor.spawn('staking-reward', 'staking-reward.worker');
+  }
+
   return supervisor;
 }
 

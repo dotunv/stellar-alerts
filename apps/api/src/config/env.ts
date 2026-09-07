@@ -20,9 +20,11 @@ const envSchema = z.object({
   SOROBAN_RENT_RENEWAL_THRESHOLD: z.string().optional().default("5000"),
   SOROBAN_RENT_TARGET_TTL: z.string().optional().default("10000"),
   SOROBAN_RENT_MAX_CONCURRENCY: z.string().optional().default("5"),
+  SOROBAN_STAKING_REWARD_WORKER_ENABLED: z.string().optional().default("true"),
 });
+export type Env = z.infer<typeof envSchema>;
 
-const parseEnv = () => {
+const parseEnv = (): Env => {
   const envInput = {
     ...process.env,
     DATABASE_URL: process.env.DATABASE_URL || (process.env.NODE_ENV === 'test' || process.env.VITEST ? "postgresql://postgres:postgres@localhost:5432/stellar_alerts" : undefined),
@@ -38,8 +40,8 @@ const parseEnv = () => {
     SOROBAN_RENT_RENEWAL_THRESHOLD: process.env.SOROBAN_RENT_RENEWAL_THRESHOLD || "5000",
     SOROBAN_RENT_TARGET_TTL: process.env.SOROBAN_RENT_TARGET_TTL || "10000",
     SOROBAN_RENT_MAX_CONCURRENCY: process.env.SOROBAN_RENT_MAX_CONCURRENCY || "5",
+    SOROBAN_STAKING_REWARD_WORKER_ENABLED: process.env.SOROBAN_STAKING_REWARD_WORKER_ENABLED || "true",
   };
-
   const parsed = envSchema.safeParse(envInput);
 
   if (!parsed.success) {
@@ -47,6 +49,22 @@ const parseEnv = () => {
     if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
       process.exit(1);
     }
+    // Return a typed fallback matching Env so downstream code has consistent shape
+    return {
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/stellar_alerts",
+      TELEGRAM_BOT_TOKEN: "dummy-telegram-bot-token",
+      JWT_SECRET: "dummy-jwt-secret-key-12345",
+      REDIS_URL: "redis://localhost:6379",
+      PORT: "3001",
+      RATE_LIMIT_MAX: 100,
+      SOROBAN_RENT_WORKER_ENABLED: "true",
+      SOROBAN_RENT_WORKER_INTERVAL_MS: "60000",
+      SOROBAN_RENT_WORKER_SECRET: undefined,
+      SOROBAN_RENT_RENEWAL_THRESHOLD: "5000",
+      SOROBAN_RENT_TARGET_TTL: "10000",
+      SOROBAN_RENT_MAX_CONCURRENCY: "5",
+      SOROBAN_STAKING_REWARD_WORKER_ENABLED: "true",
+    } as Env;
   }
 
   return parsed.data || {
@@ -65,6 +83,7 @@ const parseEnv = () => {
     SOROBAN_RENT_RENEWAL_THRESHOLD: "5000",
     SOROBAN_RENT_TARGET_TTL: "10000",
     SOROBAN_RENT_MAX_CONCURRENCY: "5",
+    SOROBAN_STAKING_REWARD_WORKER_ENABLED: "true",
   };
 };
 

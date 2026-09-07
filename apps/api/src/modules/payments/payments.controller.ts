@@ -14,6 +14,10 @@ const getSummarySchema = z.object({
   fiat: z.string().optional(),
 });
 
+const getCrossLedgerSchema = z.object({
+  walletId: z.string().optional(),
+});
+
 export class PaymentsController {
   async getPayments(request: FastifyRequest, reply: FastifyReply) {
     const parsed = getPaymentsSchema.safeParse(request.query);
@@ -47,6 +51,22 @@ export class PaymentsController {
       parsed.data.fiat,
     );
     return reply.send({ success: true, summary });
+  }
+
+  async getCrossLedgerAnalytics(request: FastifyRequest, reply: FastifyReply) {
+    const parsed = getCrossLedgerSchema.safeParse(request.query);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Invalid query', details: parsed.error.format() });
+    }
+    if (!request.user) {
+      return reply.status(401).send({ error: 'Unauthorized', message: 'User not authenticated' });
+    }
+
+    const analytics = await paymentsService.getCrossLedgerAnalytics(
+      request.user.id,
+      parsed.data.walletId,
+    );
+    return reply.send({ success: true, analytics });
   }
 }
 

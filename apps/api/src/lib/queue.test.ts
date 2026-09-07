@@ -44,7 +44,7 @@ vi.mock('../utils/discord', () => {
 
 vi.mock('../utils/webhook-signer', () => {
   return {
-    generateWebhookSignature: vi.fn().mockReturnValue({ headerValue: 'test', nonce: 'test' }),
+    signWebhookPayload: vi.fn().mockResolvedValue({ headerValue: 'test', nonce: 'test' }),
   };
 });
 

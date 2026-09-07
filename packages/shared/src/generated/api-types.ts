@@ -26,6 +26,7 @@ export interface components {
         CreateWebhookInput: {
             /** Format: uri */
             url: string;
+            payloadTemplate?: string;
         };
     };
     responses: never;

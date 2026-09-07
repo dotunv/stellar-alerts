@@ -412,7 +412,8 @@ export const ModelName = {
   PendingMultisigTransaction: 'PendingMultisigTransaction',
   AnchorTransactionWatch: 'AnchorTransactionWatch',
   DexSwapWatch: 'DexSwapWatch',
-  DexSwapEvent: 'DexSwapEvent'
+  DexSwapEvent: 'DexSwapEvent',
+  SecurityAuditLog: 'SecurityAuditLog'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -428,7 +429,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "wallet" | "ingestionCursor" | "payment" | "notificationPreference" | "webhook" | "webhookLog" | "webhookCircuitBreaker" | "sorobanEventSnapshot" | "sorobanContractSubscription" | "multisigTreasury" | "multisigSignerWatcher" | "pendingMultisigTransaction" | "anchorTransactionWatch" | "dexSwapWatch" | "dexSwapEvent"
+    modelProps: "user" | "wallet" | "ingestionCursor" | "payment" | "notificationPreference" | "webhook" | "webhookLog" | "webhookCircuitBreaker" | "sorobanEventSnapshot" | "sorobanContractSubscription" | "multisigTreasury" | "multisigSignerWatcher" | "pendingMultisigTransaction" | "anchorTransactionWatch" | "dexSwapWatch" | "dexSwapEvent" | "securityAuditLog"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1616,6 +1617,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    SecurityAuditLog: {
+      payload: Prisma.$SecurityAuditLogPayload<ExtArgs>
+      fields: Prisma.SecurityAuditLogFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SecurityAuditLogFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SecurityAuditLogFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>
+        }
+        findFirst: {
+          args: Prisma.SecurityAuditLogFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SecurityAuditLogFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>
+        }
+        findMany: {
+          args: Prisma.SecurityAuditLogFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>[]
+        }
+        create: {
+          args: Prisma.SecurityAuditLogCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>
+        }
+        createMany: {
+          args: Prisma.SecurityAuditLogCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SecurityAuditLogCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>[]
+        }
+        delete: {
+          args: Prisma.SecurityAuditLogDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>
+        }
+        update: {
+          args: Prisma.SecurityAuditLogUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>
+        }
+        deleteMany: {
+          args: Prisma.SecurityAuditLogDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SecurityAuditLogUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SecurityAuditLogUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>[]
+        }
+        upsert: {
+          args: Prisma.SecurityAuditLogUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>
+        }
+        aggregate: {
+          args: Prisma.SecurityAuditLogAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSecurityAuditLog>
+        }
+        groupBy: {
+          args: Prisma.SecurityAuditLogGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SecurityAuditLogGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SecurityAuditLogCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SecurityAuditLogCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1722,6 +1797,7 @@ export const WebhookScalarFieldEnum = {
   userId: 'userId',
   url: 'url',
   secret: 'secret',
+  payloadTemplate: 'payloadTemplate',
   isActive: 'isActive',
   createdAt: 'createdAt'
 } as const
@@ -1866,6 +1942,21 @@ export const DexSwapEventScalarFieldEnum = {
 } as const
 
 export type DexSwapEventScalarFieldEnum = (typeof DexSwapEventScalarFieldEnum)[keyof typeof DexSwapEventScalarFieldEnum]
+
+
+export const SecurityAuditLogScalarFieldEnum = {
+  id: 'id',
+  eventType: 'eventType',
+  txHash: 'txHash',
+  topic: 'topic',
+  sequence: 'sequence',
+  contractId: 'contractId',
+  details: 'details',
+  severity: 'severity',
+  createdAt: 'createdAt'
+} as const
+
+export type SecurityAuditLogScalarFieldEnum = (typeof SecurityAuditLogScalarFieldEnum)[keyof typeof SecurityAuditLogScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -2179,6 +2270,7 @@ export type GlobalOmitConfig = {
   anchorTransactionWatch?: Prisma.AnchorTransactionWatchOmit
   dexSwapWatch?: Prisma.DexSwapWatchOmit
   dexSwapEvent?: Prisma.DexSwapEventOmit
+  securityAuditLog?: Prisma.SecurityAuditLogOmit
 }
 
 /* Types for Logging */
