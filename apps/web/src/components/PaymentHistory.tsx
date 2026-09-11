@@ -15,8 +15,9 @@ export function PaymentHistory({ walletId }: { walletId: string }) {
       setLoading(true);
       try {
         const headers: Record<string, string> = {};
-        if (session && (session as any).accessToken) {
-          headers['Authorization'] = `Bearer ${(session as any).accessToken}`;
+        const accessToken = (session as (typeof session & { accessToken?: string }) | null)?.accessToken;
+        if (accessToken) {
+          headers['Authorization'] = `Bearer ${accessToken}`;
         }
         
         const res = await fetch(`http://localhost:3001/payments?walletId=${encodeURIComponent(walletId)}`, {

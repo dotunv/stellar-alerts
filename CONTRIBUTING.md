@@ -33,12 +33,24 @@ npm install
    ```
 2. Update `apps/api/.env` with your local database URL and JWT secret:
    ```env
-   DATABASE_URL="postgresql://postgres:postgrespassword@localhost:5432/stellar_alerts?schema=public"
+   DATABASE_URL="postgresql://postgres:postgrespassword@localhost:5432/stellar_alerts?schema=public&connection_limit=20&pool_timeout=10"
    JWT_SECRET="your-super-secret-jwt-key"
    PORT="3001"
    REDIS_HOST="localhost"
    REDIS_PORT="6379"
    ```
+
+3. Tune the database connection pool through `DATABASE_URL` query parameters:
+
+   | Parameter | Default | Meaning |
+   |---|---|---|
+   | `connection_limit` | `20` | Maximum connections held open by the pool |
+   | `pool_timeout` | `10` | Seconds a query waits for a free connection before failing |
+   | `idle_timeout` | `30` | Seconds an unused connection is kept before being released |
+
+   Set `DATABASE_REPLICA_URL` to send read-only queries (wallet and payment
+   listings) to a PostgreSQL read replica. Without it those queries run against
+   the primary.
 
 ---
 

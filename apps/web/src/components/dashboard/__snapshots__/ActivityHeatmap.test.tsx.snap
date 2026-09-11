@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ActivityHeatmap > exposes daily counts through accessible labels and snapshot markup 1`] = `
+{
+  "dayCount": 365,
+  "legend": "LessMore",
+  "selectedDay": "2 transactions",
+  "title": "▦ Activity",
+}
+`;

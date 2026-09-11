@@ -39,7 +39,7 @@ describe('AuthService', () => {
   describe('verifyMagicLink', () => {
     it('should successfully verify a valid magic token and upsert user', async () => {
       const email = 'maintainer@stellar-alerts.org';
-      const magicToken = generateMagicToken(email);
+      const magicToken = await authService.requestMagicLink(email);
 
       const mockUser = { id: 'user_cuid_123', email, createdAt: new Date() };
       (prisma.user.upsert as any).mockResolvedValue(mockUser);

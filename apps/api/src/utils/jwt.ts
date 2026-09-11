@@ -11,10 +11,12 @@ export interface UserPayload {
 
 export interface MagicLinkPayload {
   email: string;
+  jti: string;
 }
 
 export function generateMagicToken(email: string): string {
-  return jwt.sign({ email }, env.JWT_SECRET, { expiresIn: '15m' });
+  const { randomUUID } = require('crypto');
+  return jwt.sign({ email }, env.JWT_SECRET, { expiresIn: '15m', jwtid: randomUUID() });
 }
 
 export function generateSessionToken(user: Omit<UserPayload, 'jti' | 'exp'>): string {

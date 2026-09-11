@@ -3,7 +3,14 @@ import {
   generateWebhookSignature,
   verifyWebhookSignature,
   verifyWebhookSignatureSync,
+  generateWebhookSignatureKms,
+  signWebhookPayload,
+  configureKmsWebhookSigner,
+  resetConfiguredKmsWebhookSigner,
+  evaluateWebhookVerification,
+  parseWebhookSignatureHeader,
 } from '../webhook-signer';
+import { createMockKmsHmacClient } from '../kms-signer';
 import { NONCE_PREFIX } from '../../lib/nonceCache';
 
 // ---------------------------------------------------------------------------
@@ -43,6 +50,7 @@ describe('Webhook HMAC Signer & Replay Prevention', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    resetConfiguredKmsWebhookSigner();
   });
 
   describe('generateWebhookSignature', () => {
@@ -181,6 +189,31 @@ describe('Webhook HMAC Signer & Replay Prevention', () => {
         const header = `t=invalid_timestamp,n=123,v1=abc`;
         expect(await verifyWebhookSignature(payload, header, secret)).toBe(false);
       });
+
+      it('should map malformed headers to HTTP 400 via evaluateWebhookVerification', () => {
+        expect(evaluateWebhookVerification(payload, '', secret).status).toBe(400);
+        expect(evaluateWebhookVerification(payload, 'invalid_header', secret).status).toBe(400);
+        expect(evaluateWebhookVerification(payload, 't=abc,v1=short', secret).status).toBe(400);
+      });
+
+      it('should map invalid signatures to HTTP 401 via evaluateWebhookVerification', () => {
+        const now = Date.now();
+        const result = generateWebhookSignature(payload, secret, now);
+        const evaluation = evaluateWebhookVerification(payload, result.headerValue, 'wrong_secret');
+        expect(evaluation.status).toBe(401);
+        expect(evaluation.valid).toBe(false);
+      });
+
+      it('should parse valid webhook signature headers', () => {
+        const now = Date.now();
+        const result = generateWebhookSignature(payload, secret, now);
+        const parsed = parseWebhookSignatureHeader(result.headerValue);
+        expect(parsed.ok).toBe(true);
+        if (parsed.ok) {
+          expect(parsed.parsed.timestamp).toBe(now);
+          expect(parsed.parsed.signature).toHaveLength(64);
+        }
+      });
     });
   });
 
@@ -207,6 +240,52 @@ describe('Webhook HMAC Signer & Replay Prevention', () => {
 
       const isValid = verifyWebhookSignatureSync('{"tampered":true}', result.headerValue, secret);
       expect(isValid).toBe(false);
+    });
+  });
+
+  describe('KMS-backed webhook signing (#189)', () => {
+    const kmsEnv = {
+      KMS_WEBHOOK_SIGNING_ENABLED: 'true',
+      KMS_PROVIDER: 'aws',
+      KMS_PRIMARY_KEY_ID: 'arn:aws:kms:us-east-1:123456789012:key/webhook-primary',
+      KMS_PREVIOUS_KEY_IDS: 'arn:aws:kms:us-east-1:123456789012:key/webhook-previous',
+    };
+
+    it('should sign webhook payloads through the configured KMS signer without using local secrets', async () => {
+      const kmsSigner = configureKmsWebhookSigner(createMockKmsHmacClient('webhook-kms-test'), kmsEnv);
+      expect(kmsSigner).not.toBeNull();
+
+      const signed = await generateWebhookSignatureKms(payload, kmsSigner!, Date.now(), 'kms-nonce-1');
+      expect(signed.signature).toHaveLength(64);
+      expect(signed.headerValue).toContain('v1=');
+    });
+
+    it('should verify KMS-signed webhook headers using the mocked KMS client', async () => {
+      const kmsSigner = configureKmsWebhookSigner(createMockKmsHmacClient('webhook-kms-test'), kmsEnv)!;
+      const now = Date.now();
+      const signed = await generateWebhookSignatureKms(payload, kmsSigner, now);
+
+      const isValid = await verifyWebhookSignature(payload, signed.headerValue, 'unused-secret', {
+        kmsSigner,
+        checkReplay: false,
+      });
+      expect(isValid).toBe(true);
+    });
+
+    it('should route signWebhookPayload through KMS when a signer is configured', async () => {
+      configureKmsWebhookSigner(createMockKmsHmacClient('webhook-kms-test'), kmsEnv);
+      const signed = await signWebhookPayload(payload);
+
+      expect(signed.signature).toHaveLength(64);
+      expect(signed.headerValue).toContain('n=');
+    });
+
+    it('should fall back to local signing when KMS is disabled', async () => {
+      resetConfiguredKmsWebhookSigner();
+      const signed = await signWebhookPayload(payload, { secret });
+
+      expect(signed.signature).toHaveLength(64);
+      expect(signed.headerValue).toContain(`v1=${signed.signature}`);
     });
   });
 });

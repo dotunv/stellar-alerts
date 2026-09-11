@@ -12,7 +12,8 @@ export function WatcherForm({ onWalletAdded }: { onWalletAdded?: () => void }) {
     e.preventDefault();
     setStatus('Submitting...');
     
-    if (!session || !(session as any).accessToken) {
+    const accessToken = (session as (typeof session & { accessToken?: string }) | null)?.accessToken;
+    if (!accessToken) {
       setStatus('Error: You must be logged in.');
       return;
     }
@@ -22,7 +23,7 @@ export function WatcherForm({ onWalletAdded }: { onWalletAdded?: () => void }) {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(session as any).accessToken}`
+          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify({ publicKey: address, label: 'Watched Wallet' })
       });

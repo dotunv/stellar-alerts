@@ -77,7 +77,7 @@ export async function processPaymentRecord(
         where: { userId: wallet.userId },
       });
 
-      if (notifyPrefs?.filterRules) {
+      if ((notifyPrefs as any)?.filterRules) {
         const paymentContext: PaymentContext = {
           amount: Number(amount),
           asset,
@@ -85,7 +85,7 @@ export async function processPaymentRecord(
           memo,
         };
         
-        shouldSendAlert = shouldAlert(notifyPrefs.filterRules as any, paymentContext);
+        shouldSendAlert = shouldAlert((notifyPrefs as any)?.filterRules, paymentContext);
         
         if (!shouldSendAlert) {
           console.log(
@@ -118,7 +118,7 @@ export async function processPaymentRecord(
 const CURSOR_PAGE_SIZE = 50;
 
 // Upper bound on pages walked in a single catch-up pass, so a long outage
-// cannot stall the poll loop indefinitely
+// cannot stall the catch-up run indefinitely
 const MAX_CATCHUP_PAGES = 20;
 
 export async function saveCursor(walletId: string, pagingToken: string) {
@@ -176,8 +176,6 @@ export async function processWalletPayments(wallet: { id: string; publicKey: str
         cursor = record.paging_token;
         await saveCursor(wallet.id, cursor);
       }
-
-      if (records.length < CURSOR_PAGE_SIZE) return;
     }
 
   log.warn(
@@ -198,7 +196,7 @@ export async function startHorizonSSEStream(wallet: { id: string; publicKey: str
   const resetHeartbeat = () => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => {
-      console.warn(`[WatcherStream] ⚠️ Heartbeat timeout for ${wallet.publicKey.substring(0, 8)}... Reconnecting...`);
+      console.warn(`[WatcherStream] ⚠️ Heartbeat timeout for ${wallet.publicKey.substring(0, 8)}... Reconnecting multi-node cluster...`);
       if (closeStream) closeStream();
       startHorizonSSEStream(wallet);
     }, 60000);
@@ -239,7 +237,6 @@ export async function startHorizonSSEStream(wallet: { id: string; publicKey: str
     log.error({ err: err.message }, 'Failed to open SSE stream');
     return null;
   }
-}
 
 export async function runWatcher() {
   log.info('🚀 Starting Stellar Testnet Watcher Worker...');
@@ -257,26 +254,112 @@ export async function runWatcher() {
         await processWalletPayments({ id: wallet.id, publicKey: wallet.publicKey, userId: wallet.userId });
       }
 
-      // Process multi-contract Soroban events
-      const contractIds = getActiveContractIds();
-      if (contractIds.length > 0) {
-        console.log(
-          `[WatcherWorker] Processing ${contractIds.length} Soroban contract subscriptions...`,
-        );
-        for (const contractId of contractIds) {
-          await processSorobanContractEvents(contractId);
+  const open = () => {
+    if (closedByCaller) return;
+    attempts += 1;
+
+    closeCurrent = connector(lastCursor, {
+      onmessage: async (record: any) => {
+        await handleStreamRecord(wallet, record);
+        if (record.paging_token) {
+          lastCursor = record.paging_token;
         }
+      },
+      onerror: (error: any) => {
+        console.error(
+          `[WatcherStream] ⚠️ SSE stream error for ${wallet.publicKey.substring(0, 8)}...:`,
+          error?.message ?? error
+        );
+        // Tear down the (possibly half-open) connection before reconnecting so
+        // we never end up with two overlapping streams.
+        if (closeCurrent) {
+          try {
+            closeCurrent();
+          } catch {
+            /* ignore */
+          }
+          closeCurrent = null;
+        }
+        scheduleReconnect();
+      },
+    });
+  };
+
+  const close = () => {
+    closedByCaller = true;
+    clearReconnectTimer();
+    if (closeCurrent) {
+      try {
+        closeCurrent();
+      } catch {
+        /* ignore */
       }
     } catch (error) {
       log.error({ err: error }, 'Polling error');
     }
   };
 
+  console.log(
+    `[WatcherWorker] 📡 Opening Horizon SSE payment stream for wallet ${wallet.publicKey.substring(0, 8)}... (cursor ${lastCursor})`
+  );
+  open();
+
+  return close;
+}
+
+/**
+ * Runs a single payment-catchup + Soroban-event poll cycle. Any error from
+ * a wallet/contract fetch (a chaos-injected network fault, a dropped DB
+ * connection, Horizon timing out, ...) is caught here rather than left to
+ * propagate — this is what keeps a transient upstream fault from becoming
+ * an unhandled rejection that crashes the process; the next scheduled poll
+ * simply tries again. Exported separately from runWatcher so this exact
+ * fault-tolerance behavior is directly unit-testable —
+ * see __tests__/chaos.test.ts.
+ */
+export async function pollOnce(): Promise<void> {
+  try {
+    const wallets = await prisma.wallet.findMany();
+    if (wallets.length === 0) {
+      console.log(
+        "[WatcherWorker] No wallets registered in DB to watch. Waiting for next poll...",
+      );
+      return;
+    }
+
+    console.log(
+      `[WatcherWorker] Checking ${wallets.length} registered wallet(s)...`,
+    );
+    for (const wallet of wallets) {
+      await processWalletPayments({ id: wallet.id, publicKey: wallet.publicKey, userId: wallet.userId });
+    }
+
+    // Process multi-contract Soroban events
+    const contractIds = getActiveContractIds();
+    if (contractIds.length > 0) {
+      console.log(
+        `[WatcherWorker] Processing ${contractIds.length} Soroban contract subscriptions...`,
+      );
+      for (const contractId of contractIds) {
+        await processSorobanContractEvents(contractId);
+      }
+    }
+  } catch (error) {
+    console.error("[WatcherWorker] Polling error:", error);
+  }
+}
+
+export async function runWatcher() {
+  console.log("[WatcherWorker] 🚀 Starting Stellar Testnet Watcher Worker...");
+
+  // Load Soroban contract subscriptions
+  await loadContractRegistry();
+
   // Initial payment catchup run
-  await poll();
+  await pollOnce();
 
   // Schedule periodic catchup poll every 30 seconds
-  setInterval(poll, 30000);
+  setInterval(pollOnce, 30000);
 
   // Reload contract registry every 5 minutes
   setInterval(() => {
@@ -308,10 +391,35 @@ async function processSorobanContractEvents(contractId: string) {
       latestLedger,
     )) {
       for (const event of eventBatch) {
-        const parsed = parseSorobanTransferEvent(event);
+        const parsed = parseSacTransferEvent(event);
         if (!parsed) continue;
 
+        const txHash = event.txHash || event.transactionHash || event.transaction_hash || event.hash || (event as any).id || '';
+        const topic = (parsed as any).topic || (Array.isArray(event.topic) ? event.topic[0] : event.topic) || 'transfer';
+        const sequence = (parsed as any).ledgerSeq || event.ledgerSeq || event.ledger || event.pagingToken || startLedger;
+
+        // Replay Guard: Audit txHash + topic sequence pair against Redis cache
+        const isValidNonce = await nonceAuditManager.validateAndRecordNonce({
+          txHash,
+          topic,
+          sequence,
+          contractId,
+          details: {
+            from: parsed.from,
+            to: parsed.to,
+            amount: parsed.amount,
+          },
+        });
+
+        if (!isValidNonce) {
+          console.warn(
+            `[SorobanRouter] 🛡️ Event replay guard rejected replayed event (topic: ${topic}, txHash: ${txHash}, sequence: ${sequence})`,
+          );
+          continue;
+        }
+
         const routes = routeEventToUsers(event);
+
 
         for (const route of routes) {
           console.log(
@@ -323,7 +431,7 @@ async function processSorobanContractEvents(contractId: string) {
               where: {
                 contractId_ledgerSeq_from_to_amount: {
                   contractId: parsed.contractId,
-                  ledgerSeq: parsed.ledgerSeq || 0,
+                  ledgerSeq: (parsed as any).ledgerSeq || event.ledgerSeq || 0,
                   from: parsed.from,
                   to: parsed.to,
                   amount: parsed.amount,
@@ -334,7 +442,7 @@ async function processSorobanContractEvents(contractId: string) {
                 from: parsed.from,
                 to: parsed.to,
                 amount: parsed.amount,
-                ledgerSeq: parsed.ledgerSeq || 0,
+                ledgerSeq: (parsed as any).ledgerSeq || event.ledgerSeq || 0,
               },
               update: {},
             });
@@ -359,5 +467,6 @@ async function processSorobanContractEvents(contractId: string) {
 
 if (require.main === module) {
   registerSupervisorHeartbeat();
+  startMemoryMonitor();
   runWatcher();
 }

@@ -17,7 +17,8 @@ export function WatchList({ onSelect }: { onSelect?: (walletId: string) => void 
 
   useEffect(() => {
     const fetchWatches = async () => {
-      if (!session || !(session as any).accessToken) {
+      const accessToken = (session as (typeof session & { accessToken?: string }) | null)?.accessToken;
+      if (!accessToken) {
         setLoading(false);
         return;
       }
@@ -25,7 +26,7 @@ export function WatchList({ onSelect }: { onSelect?: (walletId: string) => void 
       try {
         const res = await fetch('http://localhost:3001/wallets', {
           headers: {
-            'Authorization': `Bearer ${(session as any).accessToken}`
+            'Authorization': `Bearer ${accessToken}`
           }
         });
         if (res.ok) {

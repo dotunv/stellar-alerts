@@ -1,5 +1,4 @@
-import { prisma } from '../../lib/prisma';
-import { verifyZkProof } from '../../utils/zkp-verifier';
+import { prisma, prismaRead } from '../../lib/prisma';
 
 export class WalletsService {
   async addWallet(userId: string, publicKey: string, label?: string, zkProof?: any, publicSignals?: string[]) {
@@ -37,7 +36,7 @@ export class WalletsService {
   }
 
   async getWallets(userId: string) {
-    return prisma.wallet.findMany({
+    return prismaRead.wallet.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' }
     });

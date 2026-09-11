@@ -15,6 +15,9 @@ model User {
   webhooks    Webhook[]
   notifyPrefs NotificationPreference?
   sorobanSubscriptions SorobanContractSubscription[]
+  multisigSignerWatches MultisigSignerWatcher[]
+  anchorWatches         AnchorTransactionWatch[]
+  dexSwapWatches        DexSwapWatch[]
 }
 
 model Wallet {
@@ -68,15 +71,16 @@ model NotificationPreference {
 }
 
 model Webhook {
-  id        String                   @id @default(cuid())
-  userId    String
-  user      User                     @relation(fields: [userId], references: [id])
-  url       String
-  secret    String
-  isActive  Boolean                  @default(true)
-  createdAt DateTime                 @default(now())
-  logs      WebhookLog[]
-  circuitBreaker WebhookCircuitBreaker?
+  id              String                   @id @default(cuid())
+  userId          String
+  user            User                     @relation(fields: [userId], references: [id])
+  url             String
+  secret          String
+  payloadTemplate String?
+  isActive        Boolean                  @default(true)
+  createdAt       DateTime                 @default(now())
+  logs            WebhookLog[]
+  circuitBreaker  WebhookCircuitBreaker?
 }
 
 model WebhookLog {
@@ -133,3 +137,140 @@ model SorobanContractSubscription {
   @@index([contractId])
   @@index([userId])
 }
+
+// A Stellar multisig account (e.g. a DAO treasury) being watched for pending
+// transactions that need more co-signer approvals.
+model MultisigTreasury {
+  id             String   @id @default(cuid())
+  publicKey      String   @unique
+  label          String?
+  // Which of the account's threshold levels (low/med/high) a tracked
+  // transaction must clear. Most treasury payment/transfer operations use
+  // the medium threshold; callers that track ops requiring a different
+  // level (e.g. signer changes, which use high) can override per-treasury.
+  thresholdLevel String   @default("medium")
+  createdAt      DateTime @default(now())
+  signerWatchers MultisigSignerWatcher[]
+  pendingTxs     PendingMultisigTransaction[]
+}
+
+// Maps one of a treasury's on-chain signer keys to the user who should be
+// notified when that signer's approval is still outstanding.
+model MultisigSignerWatcher {
+  id              String   @id @default(cuid())
+  treasuryId      String
+  treasury        MultisigTreasury @relation(fields: [treasuryId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  signerPublicKey String
+  createdAt       DateTime @default(now())
+
+  @@unique([treasuryId, signerPublicKey])
+  @@index([treasuryId])
+  @@index([userId])
+}
+
+// A treasury transaction envelope collecting co-signer approvals before it
+// can be submitted on-chain.
+model PendingMultisigTransaction {
+  id                String   @id @default(cuid())
+  treasuryId        String
+  treasury          MultisigTreasury @relation(fields: [treasuryId], references: [id], onDelete: Cascade)
+  // Hash of the inner transaction (stable across additional signatures being
+  // appended to the same envelope), used to dedupe repeated submissions of
+  // an updated envelope for the same underlying transaction.
+  innerTxHash       String   @unique
+  envelopeXdr       String
+  requiredThreshold Int
+  collectedWeight   Int      @default(0)
+  signedByJson      Json     @default("[]")
+  notifiedJson      Json     @default("[]")
+  status            String   @default("pending") // pending | threshold_met | executed | expired
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([treasuryId])
+  @@index([status])
+}
+
+// A user's subscription to fiat deposit/withdrawal status updates for a
+// specific SEP-24/SEP-31 anchor transaction (identified by the anchor's own
+// transaction id, not a Stellar ledger tx hash — SEP transactions can exist
+// for a while in `incomplete`/`pending_external` before any ledger tx does).
+model AnchorTransactionWatch {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Base URL of the anchor's SEP-24 or SEP-31 transfer server, e.g.
+  // "https://anchor.example.com/sep24".
+  anchorEndpoint    String
+  // The anchor's own transaction id (SEP-24 `id` / SEP-31 `id` field).
+  anchorTxId        String
+  // "sep24" | "sep31"
+  protocol          String
+  lastKnownStatus   String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([anchorEndpoint, anchorTxId])
+  @@index([userId])
+  @@index([lastKnownStatus])
+}
+
+// A user's alert threshold on a Soroban DEX (Phoenix / Soroswap style)
+// liquidity pool contract for large swaps / high price-impact trades.
+model DexSwapWatch {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  poolContractId      String
+  // Minimum swap amount (in the pool's output asset, decimal string) that
+  // should trigger an alert. Null means "alert on every swap".
+  minAmountThreshold  String?
+  // Minimum price-impact / slippage percentage (e.g. "2.5" = 2.5%) that
+  // should trigger an alert regardless of amount.
+  minSlippagePercent  String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([userId, poolContractId])
+  @@index([poolContractId])
+}
+
+// Dedup / audit record of a detected DEX swap event so a re-polled ledger
+// range doesn't re-alert on the same on-chain swap.
+model DexSwapEvent {
+  id               String   @id @default(cuid())
+  poolContractId   String
+  ledgerSeq        Int
+  txHash           String?
+  tokenInAddress   String
+  tokenOutAddress  String
+  amountIn         String
+  amountOut        String
+  priceImpactPct   String?
+  createdAt        DateTime @default(now())
+
+  @@unique([poolContractId, ledgerSeq, tokenInAddress, tokenOutAddress, amountIn, amountOut])
+  @@index([poolContractId])
+  @@index([ledgerSeq])
+}
+
+// Audit record of security events and contract event replay attempts
+model SecurityAuditLog {
+  id          String   @id @default(cuid())
+  eventType   String   @default("EVENT_REPLAY_ATTEMPT")
+  txHash      String?
+  topic       String?
+  sequence    String?
+  contractId  String?
+  details     Json?
+  severity    String   @default("HIGH")
+  createdAt   DateTime @default(now())
+
+  @@index([eventType])
+  @@index([txHash])
+  @@index([createdAt])
+}
+

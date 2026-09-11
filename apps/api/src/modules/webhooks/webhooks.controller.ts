@@ -10,7 +10,7 @@ export class WebhooksController {
     }
 
     const userId = (request as any).user.id;
-    const webhook = await webhooksService.addWebhook(userId, parsed.data.url);
+    const webhook = await webhooksService.addWebhook(userId, parsed.data.url, parsed.data.payloadTemplate);
     return reply.status(201).send({ success: true, webhook });
   }
 

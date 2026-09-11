@@ -40,7 +40,7 @@ export const PaymentTable: React.FC<PaymentTableProps> = ({ payments = [], isLoa
       p.amount,
       p.asset,
       p.memo || '',
-      new Date(p.receivedAt || (p as any).createdAt).toISOString(),
+      new Date(p.receivedAt).toISOString(),
     ]);
 
     const csvContent = [
@@ -231,7 +231,7 @@ export const PaymentTable: React.FC<PaymentTableProps> = ({ payments = [], isLoa
               {filteredPayments.map((payment) => (
                 <tr key={payment.id} className="hover:bg-slate-800/30 transition-colors">
                   <td className="py-3.5 px-4 text-xs font-mono text-slate-400 whitespace-nowrap">
-                    {new Date(payment.receivedAt || (payment as any).createdAt).toLocaleString()}
+                    {new Date(payment.receivedAt).toLocaleString()}
                   </td>
                   <td className="py-3.5 px-4 font-semibold text-emerald-400 whitespace-nowrap">
                     +{Number(payment.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}

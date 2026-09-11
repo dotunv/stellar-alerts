@@ -60,7 +60,14 @@ export const ModelName = {
   WebhookLog: 'WebhookLog',
   WebhookCircuitBreaker: 'WebhookCircuitBreaker',
   SorobanEventSnapshot: 'SorobanEventSnapshot',
-  SorobanContractSubscription: 'SorobanContractSubscription'
+  SorobanContractSubscription: 'SorobanContractSubscription',
+  MultisigTreasury: 'MultisigTreasury',
+  MultisigSignerWatcher: 'MultisigSignerWatcher',
+  PendingMultisigTransaction: 'PendingMultisigTransaction',
+  AnchorTransactionWatch: 'AnchorTransactionWatch',
+  DexSwapWatch: 'DexSwapWatch',
+  DexSwapEvent: 'DexSwapEvent',
+  SecurityAuditLog: 'SecurityAuditLog'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -133,7 +140,9 @@ export const NotificationPreferenceScalarFieldEnum = {
   telegramEnabled: 'telegramEnabled',
   emailEnabled: 'emailEnabled',
   whatsappNumber: 'whatsappNumber',
-  whatsappEnabled: 'whatsappEnabled'
+  whatsappEnabled: 'whatsappEnabled',
+  language: 'language',
+  filterRules: 'filterRules'
 } as const
 
 export type NotificationPreferenceScalarFieldEnum = (typeof NotificationPreferenceScalarFieldEnum)[keyof typeof NotificationPreferenceScalarFieldEnum]
@@ -144,6 +153,7 @@ export const WebhookScalarFieldEnum = {
   userId: 'userId',
   url: 'url',
   secret: 'secret',
+  payloadTemplate: 'payloadTemplate',
   isActive: 'isActive',
   createdAt: 'createdAt'
 } as const
@@ -207,12 +217,125 @@ export const SorobanContractSubscriptionScalarFieldEnum = {
 export type SorobanContractSubscriptionScalarFieldEnum = (typeof SorobanContractSubscriptionScalarFieldEnum)[keyof typeof SorobanContractSubscriptionScalarFieldEnum]
 
 
+export const MultisigTreasuryScalarFieldEnum = {
+  id: 'id',
+  publicKey: 'publicKey',
+  label: 'label',
+  thresholdLevel: 'thresholdLevel',
+  createdAt: 'createdAt'
+} as const
+
+export type MultisigTreasuryScalarFieldEnum = (typeof MultisigTreasuryScalarFieldEnum)[keyof typeof MultisigTreasuryScalarFieldEnum]
+
+
+export const MultisigSignerWatcherScalarFieldEnum = {
+  id: 'id',
+  treasuryId: 'treasuryId',
+  userId: 'userId',
+  signerPublicKey: 'signerPublicKey',
+  createdAt: 'createdAt'
+} as const
+
+export type MultisigSignerWatcherScalarFieldEnum = (typeof MultisigSignerWatcherScalarFieldEnum)[keyof typeof MultisigSignerWatcherScalarFieldEnum]
+
+
+export const PendingMultisigTransactionScalarFieldEnum = {
+  id: 'id',
+  treasuryId: 'treasuryId',
+  innerTxHash: 'innerTxHash',
+  envelopeXdr: 'envelopeXdr',
+  requiredThreshold: 'requiredThreshold',
+  collectedWeight: 'collectedWeight',
+  signedByJson: 'signedByJson',
+  notifiedJson: 'notifiedJson',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PendingMultisigTransactionScalarFieldEnum = (typeof PendingMultisigTransactionScalarFieldEnum)[keyof typeof PendingMultisigTransactionScalarFieldEnum]
+
+
+export const AnchorTransactionWatchScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  anchorEndpoint: 'anchorEndpoint',
+  anchorTxId: 'anchorTxId',
+  protocol: 'protocol',
+  lastKnownStatus: 'lastKnownStatus',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AnchorTransactionWatchScalarFieldEnum = (typeof AnchorTransactionWatchScalarFieldEnum)[keyof typeof AnchorTransactionWatchScalarFieldEnum]
+
+
+export const DexSwapWatchScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  poolContractId: 'poolContractId',
+  minAmountThreshold: 'minAmountThreshold',
+  minSlippagePercent: 'minSlippagePercent',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DexSwapWatchScalarFieldEnum = (typeof DexSwapWatchScalarFieldEnum)[keyof typeof DexSwapWatchScalarFieldEnum]
+
+
+export const DexSwapEventScalarFieldEnum = {
+  id: 'id',
+  poolContractId: 'poolContractId',
+  ledgerSeq: 'ledgerSeq',
+  txHash: 'txHash',
+  tokenInAddress: 'tokenInAddress',
+  tokenOutAddress: 'tokenOutAddress',
+  amountIn: 'amountIn',
+  amountOut: 'amountOut',
+  priceImpactPct: 'priceImpactPct',
+  createdAt: 'createdAt'
+} as const
+
+export type DexSwapEventScalarFieldEnum = (typeof DexSwapEventScalarFieldEnum)[keyof typeof DexSwapEventScalarFieldEnum]
+
+
+export const SecurityAuditLogScalarFieldEnum = {
+  id: 'id',
+  eventType: 'eventType',
+  txHash: 'txHash',
+  topic: 'topic',
+  sequence: 'sequence',
+  contractId: 'contractId',
+  details: 'details',
+  severity: 'severity',
+  createdAt: 'createdAt'
+} as const
+
+export type SecurityAuditLogScalarFieldEnum = (typeof SecurityAuditLogScalarFieldEnum)[keyof typeof SecurityAuditLogScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -229,4 +352,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

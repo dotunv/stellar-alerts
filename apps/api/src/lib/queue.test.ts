@@ -44,7 +44,7 @@ vi.mock('../utils/discord', () => {
 
 vi.mock('../utils/webhook-signer', () => {
   return {
-    generateWebhookSignature: vi.fn().mockReturnValue({ headerValue: 'test', nonce: 'test' }),
+    signWebhookPayload: vi.fn().mockResolvedValue({ headerValue: 'test', nonce: 'test' }),
   };
 });
 
@@ -60,7 +60,7 @@ vi.mock('resend', () => {
   };
 });
 
-import { alertQueue, dlqQueue, paymentAlertWorkerProcessor, failedJobHandler } from './queue';
+import { alertQueue, dlqQueue, paymentAlertWorkerProcessor, failedJobHandler, createRedisConnectionConfig } from './queue';
 import { prisma } from './prisma';
 
 describe('Queue DLQ routing', () => {
@@ -94,6 +94,39 @@ describe('Queue DLQ routing', () => {
     await failedJobHandler({ jobId: '124', failedReason: 'Test error' });
 
     expect(MockQueueAdd).not.toHaveBeenCalled();
+  });
+});
+
+describe('Redis Sentinel Connection Configuration', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  it('builds standard Redis connection when REDIS_SENTINELS is not set', () => {
+    delete process.env.REDIS_SENTINELS;
+    const config = createRedisConnectionConfig();
+
+    expect(config).toHaveProperty('host');
+    expect(config).toHaveProperty('port');
+    expect(config.maxRetriesPerRequest).toBeNull();
+  });
+
+  it('builds Sentinel connection options when REDIS_SENTINELS is set', () => {
+    process.env.REDIS_SENTINELS = 'sentinel1:26379,sentinel2:26379,sentinel3:26379';
+    process.env.REDIS_SENTINEL_MASTER_NAME = 'test-master';
+
+    const config = createRedisConnectionConfig() as any;
+
+    expect(config.sentinels).toHaveLength(3);
+    expect(config.sentinels[0]).toEqual({ host: 'sentinel1', port: 26379 });
+    expect(config.name).toBe('test-master');
+    expect(config.role).toBe('master');
+    expect(config.maxRetriesPerRequest).toBeNull();
+    expect(typeof config.reconnectOnError).toBe('function');
+    expect(config.reconnectOnError(new Error('READONLY You can\'t write against a read only replica.'))).toBe(true);
+    expect(config.reconnectOnError(new Error('Some other error'))).toBe(false);
   });
 });
 
