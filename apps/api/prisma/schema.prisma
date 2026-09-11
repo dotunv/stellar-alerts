@@ -5,6 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -71,16 +72,19 @@ model NotificationPreference {
 }
 
 model Webhook {
-  id              String                   @id @default(cuid())
-  userId          String
-  user            User                     @relation(fields: [userId], references: [id])
-  url             String
-  secret          String
-  payloadTemplate String?
-  isActive        Boolean                  @default(true)
-  createdAt       DateTime                 @default(now())
-  logs            WebhookLog[]
-  circuitBreaker  WebhookCircuitBreaker?
+  id                String                   @id @default(cuid())
+  userId            String
+  user              User                     @relation(fields: [userId], references: [id])
+  url               String
+  secretCiphertext  String
+  secretIv          String
+  secretAuthTag     String
+  keyVersion        Int                      @default(1)
+  payloadTemplate   String?
+  isActive          Boolean                  @default(true)
+  createdAt         DateTime                 @default(now())
+  logs              WebhookLog[]
+  circuitBreaker    WebhookCircuitBreaker?
 }
 
 model WebhookLog {
@@ -273,4 +277,3 @@ model SecurityAuditLog {
   @@index([txHash])
   @@index([createdAt])
 }
-

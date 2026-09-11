@@ -1,0 +1,5 @@
+-- Encrypted Secret Vault migration
+-- No structural changes are required. The existing `secret` column now stores
+-- an encrypted composite string (version:iv:authTag:ciphertext) instead of a
+-- plaintext webhook signing secret. Existing plaintext values must be
+-- re-encrypted at the application layer (e.g., during deployment).

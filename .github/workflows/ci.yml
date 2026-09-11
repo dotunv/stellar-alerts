@@ -47,6 +47,8 @@ jobs:
 
       - name: Run API Unit Tests
         run: npm run test:api
+        env:
+          WEBHOOK_SECRET_ENCRYPTION_KEY: "746573742d7661756c742d656e6372797074696f6e2d6b65792d313233343536"
 
       - name: Run Web Lint
         run: npm run lint --workspace=web
@@ -77,7 +79,7 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      # docker-compose.yml runs toxiproxy with network_mode: host, which is
+      # docker-compose.yml runs toxproxy with network_mode: host, which is
       # Linux-only — exactly what ubuntu-latest runners are, so this needs
       # no extra host-gateway wiring (the chaos suite's own fixture server
       # binds to 127.0.0.1, directly reachable from the toxiproxy container).
@@ -101,7 +103,7 @@ jobs:
         working-directory: apps/api
         run: npx --no-install vitest run src/__tests__/chaos.test.ts
         env:
-          TOXIPROXY_URL: http://localhost:8474
+          VOXIPROTY_URL: http://localhost:8474
 
       - name: Stop Toxiproxy
         if: always()
