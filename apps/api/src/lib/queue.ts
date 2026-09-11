@@ -1,10 +1,8 @@
-import { Queue, QueueEvents, Job, Worker } from "bullmq";
-import { Resend } from "resend";
-import CircuitBreaker from "opossum";
-import { prisma } from "./prisma";
-import { generateWebhookSignature } from "../utils/webhook-signer";
-import { applyWebhookPayloadTemplate } from "../utils/payload-template";
-import { adaptiveWebhookRateLimiter, waitForAdaptiveBackoff } from "../utils/rate-limiter";
+import { Queue, QueueEvents, Job, Worker } from 'bullmq';
+import { Resend } from 'resend';
+import { createLogger } from './logger';
+
+const queueLog = createLogger({ module: 'Queue' });
 
 export interface AlertJobData {
   paymentId: string;
@@ -15,6 +13,8 @@ export interface AlertJobData {
   assetIssuer?: string | null;
   fromAddress: string;
   receivedAt: string;
+  /** Correlation ID propagated from the originating HTTP request, if any. */
+  requestId?: string;
 }
 
 const redisHost = process.env.REDIS_HOST || "localhost";
@@ -404,60 +404,20 @@ try {
     },
   });
 
-  dlqQueue = new Queue<AlertJobData>("payment-alerts-dlq", { connection });
-  alertQueueEvents = new QueueEvents("payment-alerts", { connection });
+  dlqQueue = new Queue<AlertJobData>('payment-alerts-dlq', { connection });
+  alertQueueEvents = new QueueEvents('payment-alerts', { connection });
 
-  alertWorker = new Worker<AlertJobData>(
-    "payment-alerts",
-    async (job) => {
-      const data = job.data;
+  alertWorker = new Worker<AlertJobData>('payment-alerts', async (job) => {
+    const data = job.data;
+    // Bind the correlation ID from the enqueuing request so every log line
+    // produced during job processing shares the same requestId.
+    const jobLog = createLogger({ module: 'AlertWorker', requestId: data.requestId });
 
-      // Get user's active webhooks
-      const wallet = await prisma.wallet.findUnique({
-        where: { id: data.walletId },
-        include: {
-          user: {
-            include: {
-              webhooks: {
-                where: { isActive: true },
-              },
-            },
-          },
-        },
-      });
-
-      // Prepare webhook payload
-      const webhookPayload = {
-        event: "payment.received",
-        timestamp: new Date().toISOString(),
-        data: {
-          paymentId: data.paymentId,
-          txHash: data.txHash,
-          amount: data.amount,
-          asset: data.asset,
-          assetIssuer: data.assetIssuer,
-          fromAddress: data.fromAddress,
-          receivedAt: data.receivedAt,
-        },
-      };
-
-      // Dispatch to all user webhooks (non-blocking)
-      if (wallet?.user?.webhooks) {
-        await Promise.all(
-          wallet.user.webhooks.map((webhook) =>
-            dispatchWebhookAndLog(webhook.id, webhookPayload),
-          ),
-        ).catch((err) => {
-          console.warn(`[Worker] Webhook dispatch had errors: ${err.message}`);
-        });
-      }
-
-      // Send email alert
-      const { data: resendData, error } = await resend.emails.send({
-        from: "Stellar Alerts <alerts@resend.dev>",
-        to: [data.fromAddress],
-        subject: `Payment Receipt: ${data.amount} ${data.asset}`,
-        html: `
+    const { data: resendData, error } = await resend.emails.send({
+      from: 'Stellar Alerts <alerts@resend.dev>',
+      to: [data.fromAddress],
+      subject: `Payment Receipt: ${data.amount} ${data.asset}`,
+      html: `
         <h1>Payment Receipt</h1>
         <p><strong>Payment ID:</strong> ${data.paymentId}</p>
         <p><strong>Transaction Hash:</strong> ${data.txHash}</p>
@@ -467,25 +427,34 @@ try {
       `,
       });
 
-      if (error) {
-        throw new Error(`Resend Error: ${error.message}`);
+    if (error) {
+      throw new Error(`Resend Error: ${error.message}`);
+    }
+
+    jobLog.info({ paymentId: data.paymentId }, 'Sent email receipt');
+    return resendData;
+  }, { connection });
+
+  alertQueueEvents.on("failed", async ({ jobId, failedReason }) => {
+    if (!jobId || !alertQueue || !dlqQueue) return;
+    try {
+      const job = await Job.fromId(alertQueue, jobId);
+      if (job && job.attemptsMade >= (job.opts.attempts || 5)) {
+        await dlqQueue.add("dispatch-alert-failed", job.data, {
+          jobId: `dlq-${jobId}`,
+        });
+        queueLog.warn({ jobId, failedReason }, 'Moved failed job to DLQ');
       }
-
-      console.log(`[Worker] Sent email receipt for ${data.paymentId}`);
-      return resendData;
-    },
-    { connection },
-  );
-
-  if (alertQueueEvents) {
-    alertQueueEvents.on("failed", failedJobHandler);
+    } catch (e: any) {
+      queueLog.warn({ jobId, err: e.message }, 'Could not route job to DLQ');
+    }
+  } catch (err: any) {
+    console.warn(`[Worker] Failed to dispatch Slack alerts for ${data.paymentId}: ${err.message}`);
   }
 
-  console.log(
-    `[Queue] 📡 BullMQ payment-alerts queue initialized (${redisHost}:${redisPort})`,
-  );
+  queueLog.info({ host: redisHost, port: redisPort }, '📡 BullMQ payment-alerts queue initialized');
 } catch (err: any) {
-  console.warn(`[Queue] Could not initialize BullMQ queue: ${err.message}`);
+  queueLog.warn({ err: err.message }, 'Could not initialize BullMQ queue');
 }
 
 export async function failedJobHandler({ jobId, failedReason }: { jobId?: string; failedReason?: string }) {
@@ -507,9 +476,7 @@ export async function failedJobHandler({ jobId, failedReason }: { jobId?: string
 
 export async function enqueuePaymentAlert(data: AlertJobData) {
   if (!alertQueue) {
-    console.log(
-      `[Queue] Skipping queue enqueue for payment ${data.txHash} (Queue not connected)`,
-    );
+    queueLog.info({ txHash: data.txHash }, 'Skipping queue enqueue (Queue not connected)');
     return null;
   }
 
@@ -517,12 +484,10 @@ export async function enqueuePaymentAlert(data: AlertJobData) {
     const job = await alertQueue.add("dispatch-alert", data, {
       jobId: `payment-${data.txHash}`,
     });
-    console.log(`[Queue] 📨 Enqueued payment alert job: ${job.id}`);
+    queueLog.info({ jobId: job.id, txHash: data.txHash, requestId: data.requestId }, '📨 Enqueued payment alert job');
     return job;
   } catch (err: any) {
-    console.warn(
-      `[Queue] Failed to enqueue alert for payment ${data.txHash}: ${err.message}`,
-    );
+    queueLog.warn({ txHash: data.txHash, err: err.message }, 'Failed to enqueue alert');
     return null;
   }
 }

@@ -2,49 +2,10 @@ import * as StellarSdk from 'stellar-sdk';
 import { prisma, connectWithRetry } from '../lib/prisma';
 import { stellar, decodeHorizonAsset, parseSacTransferEvent } from '../lib/stellar';
 import { enqueuePaymentAlert } from '../lib/queue';
-import {
-  getSorobanLatestLedger,
-  loadContractRegistry,
-  getActiveContractIds,
-  parseSorobanTransferEvent,
-  routeEventToUsers,
-} from '../lib/soroban';
-import { registerSupervisorHeartbeat } from './supervisor';
-import { withWalletLock } from '../lib/lock';
-import { shouldAlert, PaymentContext } from '../lib/rules-engine';
-import { MemoryMonitor, MemorySnapshot } from '../utils/memory-monitor';
-import { nonceAuditManager } from '../utils/nonce-audit';
+import { getSorobanLatestLedger } from '../lib/soroban';
+import { createLogger } from '../lib/logger';
 
-
-let memoryMonitor: MemoryMonitor | null = null;
-
-/**
- * Stops the memory monitor and exits the process so WorkerSupervisor
- * respawns it cleanly. process.exit is deferred a turn via setImmediate so
- * the log line above it actually flushes before the process goes down.
- */
-export function gracefulRestart(reason: string, snapshot: MemorySnapshot): void {
-  console.error(
-    `[WatcherWorker] 🔁 Restarting worker: ${reason} (heap usage ${(snapshot.usageRatio * 100).toFixed(1)}%)`,
-  );
-  memoryMonitor?.stop();
-  setImmediate(() => {
-    process.exit(1);
-  });
-}
-
-export function startMemoryMonitor(): MemoryMonitor {
-  memoryMonitor = new MemoryMonitor({
-    onRestartRequired: (snapshot) => gracefulRestart('memory usage exceeded restart threshold', snapshot),
-    onCleanup: (snapshot, gcRan) => {
-      console.log(
-        `[WatcherWorker] 🧹 Ran memory cleanup pass at ${(snapshot.usageRatio * 100).toFixed(1)}% heap usage (gc ran: ${gcRan})`,
-      );
-    },
-  });
-  memoryMonitor.start();
-  return memoryMonitor;
-}
+const log = createLogger({ module: 'WatcherWorker' });
 
 export async function processPaymentRecord(
   wallet: { id: string; publicKey: string; userId?: string },
@@ -85,11 +46,14 @@ export async function processPaymentRecord(
   // Deduplicate check
   const existing = await prisma.payment.findUnique({ where: { txHash } });
   if (!existing) {
-    console.log(
-      `[WatcherWorker] 💰 New ${record.type} detected for wallet (${wallet.publicKey.substring(
-        0,
-        8,
-      )}...): ${amount} ${asset}`,
+    log.info(
+      {
+        walletPublicKey: wallet.publicKey.substring(0, 8),
+        amount,
+        asset,
+        type: record.type,
+      },
+      '💰 New payment detected'
     );
 
     const payment = await prisma.payment.create({
@@ -183,15 +147,16 @@ export async function ensureCursor(wallet: {
   const created = await prisma.ingestionCursor.create({
     data: { walletId: wallet.id, pagingToken },
   });
-  console.log(
-    `[WatcherWorker] 🔖 Seeded ingestion cursor for wallet ${wallet.publicKey.substring(0, 8)}... at ${pagingToken}`,
+  log.info(
+    { walletPublicKey: wallet.publicKey.substring(0, 8), pagingToken },
+    '🔖 Seeded ingestion cursor'
   );
   return created.pagingToken;
 }
 
 export async function processWalletPayments(wallet: { id: string; publicKey: string; userId?: string }) {
   if (!wallet.publicKey || !StellarSdk.StrKey.isValidEd25519PublicKey(wallet.publicKey)) {
-    console.warn(`[WatcherWorker] Skipping invalid public key checksum: "${wallet.publicKey}"`);
+    log.warn({ walletPublicKey: wallet.publicKey }, 'Skipping invalid public key checksum');
     return;
   }
 
@@ -213,16 +178,17 @@ export async function processWalletPayments(wallet: { id: string; publicKey: str
       }
     }
 
-    if (records.length < CURSOR_PAGE_SIZE) return;
-  }
-
-  console.warn(
-    `[WatcherWorker] Catch-up page limit reached for ${wallet.publicKey.substring(0, 8)}..., resuming next poll from ${cursor}`,
+  log.warn(
+    { walletPublicKey: wallet.publicKey.substring(0, 8), cursor },
+    'Catch-up page limit reached, resuming next poll from cursor'
   );
 }
 
-export async function startHorizonSSEStream(wallet: { id: string; publicKey: string; userId?: string }) {
-  console.log(`[WatcherWorker] 📡 Opening Multi-Node Horizon SSE payment streams for wallet ${wallet.publicKey.substring(0, 8)}...`);
+export async function startHorizonSSEStream(wallet: { id: string; publicKey: string }) {
+  log.info(
+    { walletPublicKey: wallet.publicKey.substring(0, 8) },
+    '📡 Opening Horizon SSE payment stream'
+  );
 
   let timeoutId: NodeJS.Timeout;
   let closeStream: (() => void) | undefined;
@@ -240,26 +206,25 @@ export async function startHorizonSSEStream(wallet: { id: string; publicKey: str
     const cursor = await ensureCursor(wallet);
     resetHeartbeat();
 
-    closeStream = stellar.multiNode.streamPaymentsMultiNode(
-      wallet.publicKey,
-      cursor,
-      async (record: any, nodeUrl: string) => {
-        resetHeartbeat();
-        console.log(
-          `[WatcherStream] ⚡ Live SSE stream message received from ${nodeUrl}: ${record.type}`,
-        );
-        await processPaymentRecord(wallet, record);
-        if (record.paging_token) {
-          await saveCursor(wallet.id, record.paging_token);
-        }
-      },
-      (error: any, nodeUrl: string) => {
-        console.warn(
-          `[WatcherStream] SSE stream error on node ${nodeUrl} for ${wallet.publicKey.substring(0, 8)}...:`,
-          error?.message || error,
-        );
-      }
-    );
+    closeStream = stellar.server
+      .payments()
+      .forAccount(wallet.publicKey)
+      .cursor(cursor)
+      .stream({
+        onmessage: async (record: any) => {
+          log.info({ type: record.type }, '⚡ Live SSE stream message received');
+          await processPaymentRecord(wallet, record);
+          if (record.paging_token) {
+            await saveCursor(wallet.id, record.paging_token);
+          }
+        },
+        onerror: (error: any) => {
+          log.error(
+            { walletPublicKey: wallet.publicKey.substring(0, 8), err: error },
+            'SSE stream error'
+          );
+        },
+      }) as unknown as () => void; // cast to avoid typings issues since stellar-sdk types might vary
 
     const originalClose = closeStream;
     closeStream = () => {
@@ -269,47 +234,25 @@ export async function startHorizonSSEStream(wallet: { id: string; publicKey: str
 
     return closeStream;
   } catch (err: any) {
-    console.error(`[WatcherStream] Failed to open multi-node SSE stream: ${err.message}`);
-    clearTimeout(timeoutId!);
+    log.error({ err: err.message }, 'Failed to open SSE stream');
     return null;
   }
 
-  const connector: StreamConnector =
-    options.connector ??
-    ((cursor, handlers) => openPaymentStream(wallet.publicKey, cursor, handlers));
+export async function runWatcher() {
+  log.info('🚀 Starting Stellar Testnet Watcher Worker...');
 
-  const reconnectDelayMs = options.reconnectDelayMs ?? DEFAULT_RECONNECT_DELAY_MS;
-  const maxReconnectAttempts = options.maxReconnectAttempts ?? Infinity;
-  const autoReconnect = options.autoReconnect ?? true;
+  const poll = async () => {
+    try {
+      const wallets = await prisma.wallet.findMany();
+      if (wallets.length === 0) {
+        log.info('No wallets registered in DB to watch. Waiting for next poll...');
+        return;
+      }
 
-  let lastCursor = await ensureCursor(wallet);
-  let closedByCaller = false;
-  let closeCurrent: (() => void) | null = null;
-  let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-  let attempts = 0;
-
-  const clearReconnectTimer = () => {
-    if (reconnectTimer) {
-      clearTimeout(reconnectTimer);
-      reconnectTimer = null;
-    }
-  };
-
-  const scheduleReconnect = () => {
-    if (closedByCaller || !autoReconnect) return;
-    if (attempts >= maxReconnectAttempts) {
-      console.error(
-        `[WatcherStream] ⛔ Max SSE reconnect attempts (${maxReconnectAttempts}) reached for wallet ${wallet.publicKey.substring(0, 8)}...`
-      );
-      return;
-    }
-    const backoff = Math.min(reconnectDelayMs * 2 ** (attempts - 1), MAX_RECONNECT_BACKOFF_MS);
-    console.warn(
-      `[WatcherStream] 🔌 Reconnecting SSE stream for ${wallet.publicKey.substring(0, 8)}... in ${backoff}ms (attempt ${attempts + 1})`
-    );
-    clearReconnectTimer();
-    reconnectTimer = setTimeout(open, backoff);
-  };
+      log.info({ walletCount: wallets.length }, 'Checking registered wallets');
+      for (const wallet of wallets) {
+        await processWalletPayments({ id: wallet.id, publicKey: wallet.publicKey, userId: wallet.userId });
+      }
 
   const open = () => {
     if (closedByCaller) return;
@@ -351,7 +294,8 @@ export async function startHorizonSSEStream(wallet: { id: string; publicKey: str
       } catch {
         /* ignore */
       }
-      closeCurrent = null;
+    } catch (error) {
+      log.error({ err: error }, 'Polling error');
     }
   };
 
