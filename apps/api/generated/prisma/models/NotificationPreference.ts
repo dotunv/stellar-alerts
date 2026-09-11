@@ -32,6 +32,7 @@ export type NotificationPreferenceMinAggregateOutputType = {
   emailEnabled: boolean | null
   whatsappNumber: string | null
   whatsappEnabled: boolean | null
+  language: string | null
 }
 
 export type NotificationPreferenceMaxAggregateOutputType = {
@@ -42,6 +43,7 @@ export type NotificationPreferenceMaxAggregateOutputType = {
   emailEnabled: boolean | null
   whatsappNumber: string | null
   whatsappEnabled: boolean | null
+  language: string | null
 }
 
 export type NotificationPreferenceCountAggregateOutputType = {
@@ -52,6 +54,8 @@ export type NotificationPreferenceCountAggregateOutputType = {
   emailEnabled: number
   whatsappNumber: number
   whatsappEnabled: number
+  language: number
+  filterRules: number
   _all: number
 }
 
@@ -64,6 +68,7 @@ export type NotificationPreferenceMinAggregateInputType = {
   emailEnabled?: true
   whatsappNumber?: true
   whatsappEnabled?: true
+  language?: true
 }
 
 export type NotificationPreferenceMaxAggregateInputType = {
@@ -74,6 +79,7 @@ export type NotificationPreferenceMaxAggregateInputType = {
   emailEnabled?: true
   whatsappNumber?: true
   whatsappEnabled?: true
+  language?: true
 }
 
 export type NotificationPreferenceCountAggregateInputType = {
@@ -84,6 +90,8 @@ export type NotificationPreferenceCountAggregateInputType = {
   emailEnabled?: true
   whatsappNumber?: true
   whatsappEnabled?: true
+  language?: true
+  filterRules?: true
   _all?: true
 }
 
@@ -167,6 +175,8 @@ export type NotificationPreferenceGroupByOutputType = {
   emailEnabled: boolean
   whatsappNumber: string | null
   whatsappEnabled: boolean
+  language: string
+  filterRules: runtime.JsonValue | null
   _count: NotificationPreferenceCountAggregateOutputType | null
   _min: NotificationPreferenceMinAggregateOutputType | null
   _max: NotificationPreferenceMaxAggregateOutputType | null
@@ -198,6 +208,8 @@ export type NotificationPreferenceWhereInput = {
   emailEnabled?: Prisma.BoolFilter<"NotificationPreference"> | boolean
   whatsappNumber?: Prisma.StringNullableFilter<"NotificationPreference"> | string | null
   whatsappEnabled?: Prisma.BoolFilter<"NotificationPreference"> | boolean
+  language?: Prisma.StringFilter<"NotificationPreference"> | string
+  filterRules?: Prisma.JsonNullableFilter<"NotificationPreference">
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
 
@@ -209,6 +221,8 @@ export type NotificationPreferenceOrderByWithRelationInput = {
   emailEnabled?: Prisma.SortOrder
   whatsappNumber?: Prisma.SortOrderInput | Prisma.SortOrder
   whatsappEnabled?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  filterRules?: Prisma.SortOrderInput | Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
 }
 
@@ -223,6 +237,8 @@ export type NotificationPreferenceWhereUniqueInput = Prisma.AtLeast<{
   emailEnabled?: Prisma.BoolFilter<"NotificationPreference"> | boolean
   whatsappNumber?: Prisma.StringNullableFilter<"NotificationPreference"> | string | null
   whatsappEnabled?: Prisma.BoolFilter<"NotificationPreference"> | boolean
+  language?: Prisma.StringFilter<"NotificationPreference"> | string
+  filterRules?: Prisma.JsonNullableFilter<"NotificationPreference">
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id" | "userId">
 
@@ -234,6 +250,8 @@ export type NotificationPreferenceOrderByWithAggregationInput = {
   emailEnabled?: Prisma.SortOrder
   whatsappNumber?: Prisma.SortOrderInput | Prisma.SortOrder
   whatsappEnabled?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  filterRules?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.NotificationPreferenceCountOrderByAggregateInput
   _max?: Prisma.NotificationPreferenceMaxOrderByAggregateInput
   _min?: Prisma.NotificationPreferenceMinOrderByAggregateInput
@@ -250,6 +268,8 @@ export type NotificationPreferenceScalarWhereWithAggregatesInput = {
   emailEnabled?: Prisma.BoolWithAggregatesFilter<"NotificationPreference"> | boolean
   whatsappNumber?: Prisma.StringNullableWithAggregatesFilter<"NotificationPreference"> | string | null
   whatsappEnabled?: Prisma.BoolWithAggregatesFilter<"NotificationPreference"> | boolean
+  language?: Prisma.StringWithAggregatesFilter<"NotificationPreference"> | string
+  filterRules?: Prisma.JsonNullableWithAggregatesFilter<"NotificationPreference">
 }
 
 export type NotificationPreferenceCreateInput = {
@@ -259,6 +279,8 @@ export type NotificationPreferenceCreateInput = {
   emailEnabled?: boolean
   whatsappNumber?: string | null
   whatsappEnabled?: boolean
+  language?: string
+  filterRules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user: Prisma.UserCreateNestedOneWithoutNotifyPrefsInput
 }
 
@@ -270,6 +292,8 @@ export type NotificationPreferenceUncheckedCreateInput = {
   emailEnabled?: boolean
   whatsappNumber?: string | null
   whatsappEnabled?: boolean
+  language?: string
+  filterRules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type NotificationPreferenceUpdateInput = {
@@ -279,6 +303,8 @@ export type NotificationPreferenceUpdateInput = {
   emailEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsappEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  filterRules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user?: Prisma.UserUpdateOneRequiredWithoutNotifyPrefsNestedInput
 }
 
@@ -290,6 +316,8 @@ export type NotificationPreferenceUncheckedUpdateInput = {
   emailEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsappEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  filterRules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type NotificationPreferenceCreateManyInput = {
@@ -300,6 +328,8 @@ export type NotificationPreferenceCreateManyInput = {
   emailEnabled?: boolean
   whatsappNumber?: string | null
   whatsappEnabled?: boolean
+  language?: string
+  filterRules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type NotificationPreferenceUpdateManyMutationInput = {
@@ -309,6 +339,8 @@ export type NotificationPreferenceUpdateManyMutationInput = {
   emailEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsappEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  filterRules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type NotificationPreferenceUncheckedUpdateManyInput = {
@@ -319,6 +351,8 @@ export type NotificationPreferenceUncheckedUpdateManyInput = {
   emailEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsappEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  filterRules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type NotificationPreferenceNullableScalarRelationFilter = {
@@ -334,6 +368,8 @@ export type NotificationPreferenceCountOrderByAggregateInput = {
   emailEnabled?: Prisma.SortOrder
   whatsappNumber?: Prisma.SortOrder
   whatsappEnabled?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  filterRules?: Prisma.SortOrder
 }
 
 export type NotificationPreferenceMaxOrderByAggregateInput = {
@@ -344,6 +380,7 @@ export type NotificationPreferenceMaxOrderByAggregateInput = {
   emailEnabled?: Prisma.SortOrder
   whatsappNumber?: Prisma.SortOrder
   whatsappEnabled?: Prisma.SortOrder
+  language?: Prisma.SortOrder
 }
 
 export type NotificationPreferenceMinOrderByAggregateInput = {
@@ -354,6 +391,7 @@ export type NotificationPreferenceMinOrderByAggregateInput = {
   emailEnabled?: Prisma.SortOrder
   whatsappNumber?: Prisma.SortOrder
   whatsappEnabled?: Prisma.SortOrder
+  language?: Prisma.SortOrder
 }
 
 export type NotificationPreferenceCreateNestedOneWithoutUserInput = {
@@ -399,6 +437,8 @@ export type NotificationPreferenceCreateWithoutUserInput = {
   emailEnabled?: boolean
   whatsappNumber?: string | null
   whatsappEnabled?: boolean
+  language?: string
+  filterRules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type NotificationPreferenceUncheckedCreateWithoutUserInput = {
@@ -408,6 +448,8 @@ export type NotificationPreferenceUncheckedCreateWithoutUserInput = {
   emailEnabled?: boolean
   whatsappNumber?: string | null
   whatsappEnabled?: boolean
+  language?: string
+  filterRules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type NotificationPreferenceCreateOrConnectWithoutUserInput = {
@@ -433,6 +475,8 @@ export type NotificationPreferenceUpdateWithoutUserInput = {
   emailEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsappEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  filterRules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type NotificationPreferenceUncheckedUpdateWithoutUserInput = {
@@ -442,6 +486,8 @@ export type NotificationPreferenceUncheckedUpdateWithoutUserInput = {
   emailEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsappEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  filterRules?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 
@@ -454,6 +500,8 @@ export type NotificationPreferenceSelect<ExtArgs extends runtime.Types.Extension
   emailEnabled?: boolean
   whatsappNumber?: boolean
   whatsappEnabled?: boolean
+  language?: boolean
+  filterRules?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["notificationPreference"]>
 
@@ -465,6 +513,8 @@ export type NotificationPreferenceSelectCreateManyAndReturn<ExtArgs extends runt
   emailEnabled?: boolean
   whatsappNumber?: boolean
   whatsappEnabled?: boolean
+  language?: boolean
+  filterRules?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["notificationPreference"]>
 
@@ -476,6 +526,8 @@ export type NotificationPreferenceSelectUpdateManyAndReturn<ExtArgs extends runt
   emailEnabled?: boolean
   whatsappNumber?: boolean
   whatsappEnabled?: boolean
+  language?: boolean
+  filterRules?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["notificationPreference"]>
 
@@ -487,9 +539,11 @@ export type NotificationPreferenceSelectScalar = {
   emailEnabled?: boolean
   whatsappNumber?: boolean
   whatsappEnabled?: boolean
+  language?: boolean
+  filterRules?: boolean
 }
 
-export type NotificationPreferenceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "telegramChatId" | "telegramEnabled" | "emailEnabled" | "whatsappNumber" | "whatsappEnabled", ExtArgs["result"]["notificationPreference"]>
+export type NotificationPreferenceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "telegramChatId" | "telegramEnabled" | "emailEnabled" | "whatsappNumber" | "whatsappEnabled" | "language" | "filterRules", ExtArgs["result"]["notificationPreference"]>
 export type NotificationPreferenceInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -513,6 +567,8 @@ export type $NotificationPreferencePayload<ExtArgs extends runtime.Types.Extensi
     emailEnabled: boolean
     whatsappNumber: string | null
     whatsappEnabled: boolean
+    language: string
+    filterRules: runtime.JsonValue | null
   }, ExtArgs["result"]["notificationPreference"]>
   composites: {}
 }
@@ -944,6 +1000,8 @@ export interface NotificationPreferenceFieldRefs {
   readonly emailEnabled: Prisma.FieldRef<"NotificationPreference", 'Boolean'>
   readonly whatsappNumber: Prisma.FieldRef<"NotificationPreference", 'String'>
   readonly whatsappEnabled: Prisma.FieldRef<"NotificationPreference", 'Boolean'>
+  readonly language: Prisma.FieldRef<"NotificationPreference", 'String'>
+  readonly filterRules: Prisma.FieldRef<"NotificationPreference", 'Json'>
 }
     
 

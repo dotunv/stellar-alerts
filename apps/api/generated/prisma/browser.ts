@@ -28,6 +28,11 @@ export type User = Prisma.UserModel
  */
 export type Wallet = Prisma.WalletModel
 /**
+ * Model IngestionCursor
+ * 
+ */
+export type IngestionCursor = Prisma.IngestionCursorModel
+/**
  * Model Payment
  * 
  */
@@ -37,3 +42,63 @@ export type Payment = Prisma.PaymentModel
  * 
  */
 export type NotificationPreference = Prisma.NotificationPreferenceModel
+/**
+ * Model Webhook
+ * 
+ */
+export type Webhook = Prisma.WebhookModel
+/**
+ * Model WebhookLog
+ * 
+ */
+export type WebhookLog = Prisma.WebhookLogModel
+/**
+ * Model WebhookCircuitBreaker
+ * 
+ */
+export type WebhookCircuitBreaker = Prisma.WebhookCircuitBreakerModel
+/**
+ * Model SorobanEventSnapshot
+ * 
+ */
+export type SorobanEventSnapshot = Prisma.SorobanEventSnapshotModel
+/**
+ * Model SorobanContractSubscription
+ * 
+ */
+export type SorobanContractSubscription = Prisma.SorobanContractSubscriptionModel
+/**
+ * Model MultisigTreasury
+ * 
+ */
+export type MultisigTreasury = Prisma.MultisigTreasuryModel
+/**
+ * Model MultisigSignerWatcher
+ * 
+ */
+export type MultisigSignerWatcher = Prisma.MultisigSignerWatcherModel
+/**
+ * Model PendingMultisigTransaction
+ * 
+ */
+export type PendingMultisigTransaction = Prisma.PendingMultisigTransactionModel
+/**
+ * Model AnchorTransactionWatch
+ * 
+ */
+export type AnchorTransactionWatch = Prisma.AnchorTransactionWatchModel
+/**
+ * Model DexSwapWatch
+ * 
+ */
+export type DexSwapWatch = Prisma.DexSwapWatchModel
+/**
+ * Model DexSwapEvent
+ * 
+ */
+export type DexSwapEvent = Prisma.DexSwapEventModel
+/**
+ * Model SecurityAuditLog
+ * 
+ */
+export type SecurityAuditLog = Prisma.SecurityAuditLogModel

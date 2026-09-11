@@ -7,6 +7,7 @@ interface WalletListProps {
   onSelectWallet: (id: string | null) => void;
   onRemoveWallet: (id: string) => void;
   onOpenAddModal: () => void;
+  isStreamConnected?: boolean;
 }
 
 export const WalletList: React.FC<WalletListProps> = ({
@@ -15,14 +16,37 @@ export const WalletList: React.FC<WalletListProps> = ({
   onSelectWallet,
   onRemoveWallet,
   onOpenAddModal,
+  isStreamConnected = true,
 }) => {
   return (
     <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl shadow-xl mb-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <span>👛</span> Registered Stellar Wallets
-          </h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <span>👛</span> Registered Stellar Wallets
+            </h2>
+            {isStreamConnected ? (
+              <span
+                data-testid="stream-status-badge"
+                className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                Stream Connected
+              </span>
+            ) : (
+              <span
+                data-testid="stream-status-badge"
+                className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold"
+              >
+                <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                Stream Disconnected
+              </span>
+            )}
+          </div>
           <p className="text-sm text-slate-400 mt-1">
             Real-time Horizon REST &amp; SSE payment stream watchers active.
           </p>

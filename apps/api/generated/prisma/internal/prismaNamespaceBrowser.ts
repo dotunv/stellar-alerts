@@ -53,8 +53,21 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Wallet: 'Wallet',
+  IngestionCursor: 'IngestionCursor',
   Payment: 'Payment',
-  NotificationPreference: 'NotificationPreference'
+  NotificationPreference: 'NotificationPreference',
+  Webhook: 'Webhook',
+  WebhookLog: 'WebhookLog',
+  WebhookCircuitBreaker: 'WebhookCircuitBreaker',
+  SorobanEventSnapshot: 'SorobanEventSnapshot',
+  SorobanContractSubscription: 'SorobanContractSubscription',
+  MultisigTreasury: 'MultisigTreasury',
+  MultisigSignerWatcher: 'MultisigSignerWatcher',
+  PendingMultisigTransaction: 'PendingMultisigTransaction',
+  AnchorTransactionWatch: 'AnchorTransactionWatch',
+  DexSwapWatch: 'DexSwapWatch',
+  DexSwapEvent: 'DexSwapEvent',
+  SecurityAuditLog: 'SecurityAuditLog'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -93,6 +106,17 @@ export const WalletScalarFieldEnum = {
 export type WalletScalarFieldEnum = (typeof WalletScalarFieldEnum)[keyof typeof WalletScalarFieldEnum]
 
 
+export const IngestionCursorScalarFieldEnum = {
+  id: 'id',
+  walletId: 'walletId',
+  pagingToken: 'pagingToken',
+  lastSyncedAt: 'lastSyncedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type IngestionCursorScalarFieldEnum = (typeof IngestionCursorScalarFieldEnum)[keyof typeof IngestionCursorScalarFieldEnum]
+
+
 export const PaymentScalarFieldEnum = {
   id: 'id',
   walletId: 'walletId',
@@ -100,6 +124,7 @@ export const PaymentScalarFieldEnum = {
   fromAddress: 'fromAddress',
   amount: 'amount',
   asset: 'asset',
+  assetIssuer: 'assetIssuer',
   memo: 'memo',
   receivedAt: 'receivedAt',
   createdAt: 'createdAt'
@@ -115,10 +140,179 @@ export const NotificationPreferenceScalarFieldEnum = {
   telegramEnabled: 'telegramEnabled',
   emailEnabled: 'emailEnabled',
   whatsappNumber: 'whatsappNumber',
-  whatsappEnabled: 'whatsappEnabled'
+  whatsappEnabled: 'whatsappEnabled',
+  language: 'language',
+  filterRules: 'filterRules'
 } as const
 
 export type NotificationPreferenceScalarFieldEnum = (typeof NotificationPreferenceScalarFieldEnum)[keyof typeof NotificationPreferenceScalarFieldEnum]
+
+
+export const WebhookScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  url: 'url',
+  secret: 'secret',
+  payloadTemplate: 'payloadTemplate',
+  isActive: 'isActive',
+  createdAt: 'createdAt'
+} as const
+
+export type WebhookScalarFieldEnum = (typeof WebhookScalarFieldEnum)[keyof typeof WebhookScalarFieldEnum]
+
+
+export const WebhookLogScalarFieldEnum = {
+  id: 'id',
+  webhookId: 'webhookId',
+  statusCode: 'statusCode',
+  responseBody: 'responseBody',
+  error: 'error',
+  sentAt: 'sentAt',
+  createdAt: 'createdAt'
+} as const
+
+export type WebhookLogScalarFieldEnum = (typeof WebhookLogScalarFieldEnum)[keyof typeof WebhookLogScalarFieldEnum]
+
+
+export const WebhookCircuitBreakerScalarFieldEnum = {
+  id: 'id',
+  webhookId: 'webhookId',
+  state: 'state',
+  failureCount: 'failureCount',
+  lastFailureAt: 'lastFailureAt',
+  openedAt: 'openedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WebhookCircuitBreakerScalarFieldEnum = (typeof WebhookCircuitBreakerScalarFieldEnum)[keyof typeof WebhookCircuitBreakerScalarFieldEnum]
+
+
+export const SorobanEventSnapshotScalarFieldEnum = {
+  id: 'id',
+  contractId: 'contractId',
+  from: 'from',
+  to: 'to',
+  amount: 'amount',
+  ledgerSeq: 'ledgerSeq',
+  eventType: 'eventType',
+  txHash: 'txHash',
+  paid: 'paid',
+  createdAt: 'createdAt'
+} as const
+
+export type SorobanEventSnapshotScalarFieldEnum = (typeof SorobanEventSnapshotScalarFieldEnum)[keyof typeof SorobanEventSnapshotScalarFieldEnum]
+
+
+export const SorobanContractSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  contractId: 'contractId',
+  topic: 'topic',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SorobanContractSubscriptionScalarFieldEnum = (typeof SorobanContractSubscriptionScalarFieldEnum)[keyof typeof SorobanContractSubscriptionScalarFieldEnum]
+
+
+export const MultisigTreasuryScalarFieldEnum = {
+  id: 'id',
+  publicKey: 'publicKey',
+  label: 'label',
+  thresholdLevel: 'thresholdLevel',
+  createdAt: 'createdAt'
+} as const
+
+export type MultisigTreasuryScalarFieldEnum = (typeof MultisigTreasuryScalarFieldEnum)[keyof typeof MultisigTreasuryScalarFieldEnum]
+
+
+export const MultisigSignerWatcherScalarFieldEnum = {
+  id: 'id',
+  treasuryId: 'treasuryId',
+  userId: 'userId',
+  signerPublicKey: 'signerPublicKey',
+  createdAt: 'createdAt'
+} as const
+
+export type MultisigSignerWatcherScalarFieldEnum = (typeof MultisigSignerWatcherScalarFieldEnum)[keyof typeof MultisigSignerWatcherScalarFieldEnum]
+
+
+export const PendingMultisigTransactionScalarFieldEnum = {
+  id: 'id',
+  treasuryId: 'treasuryId',
+  innerTxHash: 'innerTxHash',
+  envelopeXdr: 'envelopeXdr',
+  requiredThreshold: 'requiredThreshold',
+  collectedWeight: 'collectedWeight',
+  signedByJson: 'signedByJson',
+  notifiedJson: 'notifiedJson',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PendingMultisigTransactionScalarFieldEnum = (typeof PendingMultisigTransactionScalarFieldEnum)[keyof typeof PendingMultisigTransactionScalarFieldEnum]
+
+
+export const AnchorTransactionWatchScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  anchorEndpoint: 'anchorEndpoint',
+  anchorTxId: 'anchorTxId',
+  protocol: 'protocol',
+  lastKnownStatus: 'lastKnownStatus',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AnchorTransactionWatchScalarFieldEnum = (typeof AnchorTransactionWatchScalarFieldEnum)[keyof typeof AnchorTransactionWatchScalarFieldEnum]
+
+
+export const DexSwapWatchScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  poolContractId: 'poolContractId',
+  minAmountThreshold: 'minAmountThreshold',
+  minSlippagePercent: 'minSlippagePercent',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DexSwapWatchScalarFieldEnum = (typeof DexSwapWatchScalarFieldEnum)[keyof typeof DexSwapWatchScalarFieldEnum]
+
+
+export const DexSwapEventScalarFieldEnum = {
+  id: 'id',
+  poolContractId: 'poolContractId',
+  ledgerSeq: 'ledgerSeq',
+  txHash: 'txHash',
+  tokenInAddress: 'tokenInAddress',
+  tokenOutAddress: 'tokenOutAddress',
+  amountIn: 'amountIn',
+  amountOut: 'amountOut',
+  priceImpactPct: 'priceImpactPct',
+  createdAt: 'createdAt'
+} as const
+
+export type DexSwapEventScalarFieldEnum = (typeof DexSwapEventScalarFieldEnum)[keyof typeof DexSwapEventScalarFieldEnum]
+
+
+export const SecurityAuditLogScalarFieldEnum = {
+  id: 'id',
+  eventType: 'eventType',
+  txHash: 'txHash',
+  topic: 'topic',
+  sequence: 'sequence',
+  contractId: 'contractId',
+  details: 'details',
+  severity: 'severity',
+  createdAt: 'createdAt'
+} as const
+
+export type SecurityAuditLogScalarFieldEnum = (typeof SecurityAuditLogScalarFieldEnum)[keyof typeof SecurityAuditLogScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -127,6 +321,21 @@ export const SortOrder = {
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -143,4 +352,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

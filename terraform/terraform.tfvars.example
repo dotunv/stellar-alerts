@@ -1,0 +1,22 @@
+# Example Terraform variables configuration for Stellar Alerts
+target_cloud = "aws" # Choose "aws" or "gcp"
+environment  = "dev"
+
+# Database & Redis Credentials
+db_name     = "stellar_alerts"
+db_username = "alerts_admin"
+db_password = "ReplaceWithSecurePassword123!"
+
+# Kubernetes Cluster
+k8s_node_count = 2
+
+# AWS Configurations
+aws_region              = "us-east-1"
+aws_vpc_cidr            = "10.0.0.0/16"
+aws_public_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
+aws_private_subnet_cidrs= ["10.0.10.0/24", "10.0.20.0/24"]
+aws_availability_zones  = ["us-east-1a", "us-east-1b"]
+
+# GCP Configurations
+gcp_project_id = "stellar-alerts-dev"
+gcp_region     = "us-central1"

@@ -10,15 +10,11 @@ function VerifyContent() {
   const router = useRouter();
   const token = searchParams.get('token');
 
-  const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [status, setStatus] = useState<'verifying' | 'success' | 'error'>(token ? 'verifying' : 'error');
+  const [errorMessage, setErrorMessage] = useState(token ? '' : 'Missing authentication token in URL.');
 
   useEffect(() => {
-    if (!token) {
-      setStatus('error');
-      setErrorMessage('Missing authentication token in URL.');
-      return;
-    }
+    if (!token) return;
 
     let isMounted = true;
 
@@ -42,7 +38,7 @@ function VerifyContent() {
             setErrorMessage('Invalid or expired magic link. Please request a new one.');
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Verification error:', err);
         if (isMounted) {
           setStatus('error');

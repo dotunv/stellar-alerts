@@ -1,0 +1,146 @@
+name: API Performance Benchmark
+
+# Guards against silent latency regressions before they merge (#153): boots
+# the API against a throwaway Postgres/Redis, then runs the k6 dashboard
+# hot-path load test and fails the job if the SLA budget is blown.
+#
+# The pull_request run uses a modest VU count to keep the check fast and
+# stable on shared runners; dispatch manually with a higher `vus` (the Drips
+# Wave issue asks for 500) for a deliberate capacity run.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/api/**'
+      - 'scripts/k6-load-test.js'
+      - '.github/workflows/performance.yml'
+  workflow_dispatch:
+    inputs:
+      vus:
+        description: 'Peak virtual users'
+        default: '50'
+      duration:
+        description: 'Duration to sustain peak VUs'
+        default: '30s'
+
+jobs:
+  k6-load-test:
+    name: k6 Load Test (API)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: stellar_alerts
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d stellar_alerts"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/stellar_alerts?connection_limit=100
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci-perf-test-secret-key
+      TELEGRAM_BOT_TOKEN: ci-perf-test-bot-token
+      PORT: 3001
+      NODE_ENV: development
+      # A load test must measure server capacity, not the rate limiter —
+      # raise it far above anything this benchmark can generate.
+      RATE_LIMIT_MAX: '1000000'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Sync database schema (wait + retry)
+        working-directory: apps/api
+        # db push targets the job's disposable Postgres service. Wait for
+        # the service to accept connections and retry to avoid transient
+        # race conditions on shared runners.
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/stellar_alerts
+        run: |
+          # Wait up to 60s for Postgres to accept connections
+          for i in $(seq 1 30); do
+            if nc -z localhost 5432 2>/dev/null; then
+              echo "Postgres port open."
+              break
+            fi
+            echo "Waiting for Postgres... ($i/30)"
+            sleep 2
+          done
+
+          # Retry prisma db push with exponential backoff (5 attempts).
+          # Prisma v7 does not support --skip-generate; generate is run as a
+          # separate step after the schema has been successfully pushed.
+          attempt=1
+          until [ $attempt -gt 5 ]; do
+            npx prisma db push --accept-data-loss && break
+            echo "prisma db push failed, retrying ($attempt/5)..."
+            sleep $((attempt * 2))
+            attempt=$((attempt + 1))
+          done
+
+          if [ $attempt -gt 5 ]; then
+            echo "::error::prisma db push failed after 5 attempts."
+            exit 1
+          fi
+
+          npx prisma generate
+
+      - name: Start API server
+        working-directory: apps/api
+        run: |
+          nohup npx tsx src/server.ts > "$RUNNER_TEMP/api.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/api.pid"
+
+      - name: Wait for API readiness
+        run: |
+          for _ in $(seq 1 30); do
+            if curl -sf http://localhost:3001/health > /dev/null; then
+              echo "API is up."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::API did not become ready in time."
+          cat "$RUNNER_TEMP/api.log" || true
+          exit 1
+
+      - name: Install k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Run k6 load test
+        run: k6 run scripts/k6-load-test.js
+        env:
+          BASE_URL: http://localhost:3001
+          VUS: ${{ github.event.inputs.vus || '50' }}
+          DURATION: ${{ github.event.inputs.duration || '30s' }}
+
+      - name: Show API logs
+        if: always()
+        run: cat "$RUNNER_TEMP/api.log" || true
+
+      - name: Stop API server
+        if: always()
+        run: kill "$(cat "$RUNNER_TEMP/api.pid")" 2>/dev/null || true

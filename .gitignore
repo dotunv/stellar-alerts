@@ -3,9 +3,21 @@ node_modules
 dist
 build
 .next
+coverage
+apps/**/coverage
 
 dev.db
 *.db
 scripts/
+!scripts/dr-failover.ts
+!scripts/generate-types.ts
+!scripts/security-audit.ts
+# Note: a `!scripts/<file>` negation cannot un-ignore a file inside an
+# already-excluded parent directory (git limitation) — every negated/tracked
+# one-off ops script above (k6-load-test.js included) is added with
+# `git add -f`; the negation lines are kept only as a visible inventory.
 
 apps/**/.env.local
+
+target/
+Cargo.lock

@@ -8,20 +8,36 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "turbo dev",
     "dev:api": "npm run dev --workspace=api",
     "dev:worker": "npm run dev:worker --workspace=api",
+    "dev:reporting": "npm run dev:reporting --workspace=api",
     "dev:web": "npm run dev --workspace=web",
+    "dev:collab": "npm run dev:collab --workspace=web",
     "db:push": "npm run db:push --workspace=api",
     "db:migrate": "npm run db:migrate --workspace=api",
     "db:studio": "npm run db:studio --workspace=api",
     "test:api": "npm run test --workspace=api",
-    "test": "npm run test --workspaces --if-present"
+    "test:e2e": "npm run test:e2e --workspace=api",
+    "test:coverage": "npm run test:coverage --workspace=api",
+    "test": "npm run test --workspaces --if-present",
+    "generate:types": "tsx scripts/generate-types.ts",
+    "generate:types:check": "tsx scripts/generate-types.ts --check",
+    "benchmark:stream": "tsx scripts/benchmark-stream.ts",
+    "security:audit": "osv-scanner scan source -r . --config osv-scanner.toml",
+    "prepare": "husky"
   },
   "packageManager": "npm@10.8.2",
   "dependencies": {
     "@prisma/client": "^6.19.3"
   },
   "devDependencies": {
-    "turbo": "^2.1.0"
+    "eslint": "^9.39.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.4.1",
+    "openapi-typescript": "^7.13.0",
+    "tsx": "^4.23.1",
+    "turbo": "^2.1.0",
+    "typescript": "^5.9.3"
   }
 }

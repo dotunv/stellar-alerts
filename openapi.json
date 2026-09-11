@@ -1,0 +1,97 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Stellar Alerts API",
+    "description": "Interactive API documentation for the Stellar Payment Tracker. Register wallets, monitor payments and manage webhook alert endpoints.",
+    "version": "1.0.0"
+  },
+  "components": {
+    "schemas": {
+      "RequestLinkInput": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "additionalProperties": false
+      },
+      "VerifyLinkInput": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "additionalProperties": false
+      },
+      "CreateWalletInput": {
+        "type": "object",
+        "properties": {
+          "publicKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "zkProof": {},
+          "publicSignals": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "publicKey"
+        ],
+        "additionalProperties": false
+      },
+      "CreateWebhookInput": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "maxLength": 2048,
+            "format": "uri"
+          },
+          "payloadTemplate": {
+            "type": "string",
+            "maxLength": 16384
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "paths": {},
+  "tags": [
+    {
+      "name": "auth",
+      "description": "Magic-link authentication"
+    },
+    {
+      "name": "wallets",
+      "description": "Watched Stellar wallet management"
+    },
+    {
+      "name": "payments",
+      "description": "Incoming payment history and summaries"
+    },
+    {
+      "name": "webhooks",
+      "description": "Custom webhook alert endpoint management"
+    }
+  ]
+}

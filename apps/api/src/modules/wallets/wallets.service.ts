@@ -1,11 +1,33 @@
 import { prisma, prismaRead } from '../../lib/prisma';
 
 export class WalletsService {
-  async addWallet(userId: string, publicKey: string, label?: string) {
+  async addWallet(userId: string, publicKey: string, label?: string, zkProof?: any, publicSignals?: string[]) {
     console.log(`[WalletsService] Adding wallet ${publicKey} for user ${userId}`);
+
+    let targetUserId = userId;
+
+    if (zkProof && publicSignals) {
+      const isValid = await verifyZkProof(zkProof, publicSignals);
+      if (!isValid) {
+        throw new Error('Invalid ZK proof');
+      }
+
+      // Valid ZK proof allows alert subscription without storing plaintext user email linkage
+      const secretHash = publicSignals[0];
+      const anonymousEmail = `${secretHash}@zkp.local`;
+
+      let anonUser = await prisma.user.findUnique({ where: { email: anonymousEmail } });
+      if (!anonUser) {
+        anonUser = await prisma.user.create({
+          data: { email: anonymousEmail }
+        });
+      }
+      targetUserId = anonUser.id;
+    }
+
     const wallet = await prisma.wallet.create({
       data: {
-        userId,
+        userId: targetUserId,
         publicKey,
         label,
       },

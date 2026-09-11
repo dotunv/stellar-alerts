@@ -7,3 +7,7 @@ export const requestLinkSchema = z.object({
 export const verifyLinkSchema = z.object({
   token: z.string(),
 });
+
+export const telegramInitDataSchema = z.object({
+  initData: z.string().min(1),
+});

@@ -6,6 +6,8 @@ export const createWalletSchema = z.object({
     message: 'Invalid Stellar public key format or checksum',
   }),
   label: z.string().optional(),
+  zkProof: z.any().optional(),
+  publicSignals: z.array(z.string()).optional(),
 });
 
 export const deleteWalletSchema = z.object({

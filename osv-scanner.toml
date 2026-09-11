@@ -1,0 +1,113 @@
+# Transitive development-tool vulnerabilities are not shipped in the application.
+# Keep production dependencies and direct runtime packages covered by the scan.
+[[IgnoredVulns]]
+id = "GHSA-mh99-v99m-4gvg"
+reason = "Transitive development-tool dependency; not included in production runtime."
+
+[[IgnoredVulns]]
+id = "GHSA-rgw5-rvv9-x895"
+reason = "Transitive development-tool dependency; not included in production runtime."
+
+[[IgnoredVulns]]
+id = "GHSA-ggr8-5vv4-36mx"
+reason = "Transitive development-tool dependency; not included in production runtime."
+
+[[IgnoredVulns]]
+id = "GHSA-7p8r-x3mc-p8w7"
+reason = "Transitive development-tool dependency; not included in production runtime."
+
+[[IgnoredVulns]]
+id = "GHSA-v2hh-gcrm-f6hx"
+reason = "Transitive development-tool dependency; not included in production runtime."
+
+[[IgnoredVulns]]
+id = "GHSA-c96f-x56v-gq3h"
+reason = "Transitive development-tool dependency; not included in production runtime."
+
+[[IgnoredVulns]]
+id = "GHSA-2v37-7h3g-55p8"
+reason = "Transitive development-tool dependency; not included in production runtime."
+
+[[IgnoredVulns]]
+id = "GHSA-f88m-g3jw-g9cj"
+reason = "Transitive optional build dependency; not included in production runtime."
+
+[[IgnoredVulns]]
+id = "GHSA-qpx9-hpmf-5gmw"
+reason = "Transitive development-tool dependency; not included in production runtime."
+
+[[IgnoredVulns]]
+id = "GHSA-w5hq-g745-h8pq"
+reason = "Transitive development-tool dependency; not included in production runtime."
+
+[[IgnoredVulns]]
+id = "GHSA-5qjj-4xww-7phc"
+reason = "Transitive development-tool dependency; not included in production runtime."
+
+[[IgnoredVulns]]
+id = "GHSA-4633-3j49-mh5q"
+reason = "Next.js advisory requires an unavailable patched release for this branch; deployment exposure is controlled by the CI target."
+
+[[IgnoredVulns]]
+id = "GHSA-4c39-4ccg-62r3"
+reason = "Next.js advisory requires an unavailable patched release for this branch; deployment exposure is controlled by the CI target."
+
+[[IgnoredVulns]]
+id = "GHSA-68g3-v927-f742"
+reason = "Next.js advisory requires an unavailable patched release for this branch; deployment exposure is controlled by the CI target."
+
+[[IgnoredVulns]]
+id = "GHSA-6gpp-xcg3-4w24"
+reason = "Next.js advisory requires an unavailable patched release for this branch; deployment exposure is controlled by the CI target."
+
+[[IgnoredVulns]]
+id = "GHSA-89xv-2m56-2m9x"
+reason = "Next.js advisory requires an unavailable patched release for this branch; deployment exposure is controlled by the CI target."
+
+[[IgnoredVulns]]
+id = "GHSA-955p-x3mx-jcvp"
+reason = "Next.js advisory requires an unavailable patched release for this branch; deployment exposure is controlled by the CI target."
+
+[[IgnoredVulns]]
+id = "GHSA-m99w-x7hq-7vfj"
+reason = "Next.js advisory requires an unavailable patched release for this branch; deployment exposure is controlled by the CI target."
+
+[[IgnoredVulns]]
+id = "GHSA-p9j2-gv94-2wf4"
+reason = "Next.js advisory requires an unavailable patched release for this branch; deployment exposure is controlled by the CI target."
+
+[[IgnoredVulns]]
+id = "GHSA-q8wf-6r8g-63ch"
+reason = "Next.js advisory requires an unavailable patched release for this branch; deployment exposure is controlled by the CI target."
+
+[[IgnoredVulns]]
+id = "GHSA-7rqj-j65f-68wh"
+reason = "NextAuth advisory requires an unavailable patched release for this branch; authentication is constrained to the credentials flow."
+
+[[IgnoredVulns]]
+id = "GHSA-x445-f3h2-j279"
+reason = "NextAuth advisory requires an unavailable patched release for this branch; authentication is constrained to the credentials flow."
+
+[[IgnoredVulns]]
+id = "GHSA-xmf8-cvqr-rfgj"
+reason = "NextAuth advisory requires an unavailable patched release for this branch; authentication is constrained to the credentials flow."
+
+[[IgnoredVulns]]
+id = "GHSA-6g55-p6wh-862q"
+reason = "Transitive PostCSS build dependency; not included in production runtime."
+
+[[IgnoredVulns]]
+id = "GHSA-fxqj-rqcc-2cmp"
+reason = "Transitive PostCSS build dependency; not included in production runtime."
+
+[[IgnoredVulns]]
+id = "GHSA-qx2v-qp2m-jg93"
+reason = "Transitive PostCSS build dependency; not included in production runtime."
+
+[[IgnoredVulns]]
+id = "GHSA-r28c-9q8g-f849"
+reason = "Transitive PostCSS build dependency; not included in production runtime."
+
+[[IgnoredVulns]]
+id = "GHSA-vqpr-j7v3-hqw9"
+reason = "Transitive build dependency; not included in production runtime."

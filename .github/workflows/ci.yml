@@ -11,6 +11,15 @@ jobs:
     name: Build, Lint & Test
     runs-on: ubuntu-latest
 
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -24,6 +33,9 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Verify generated OpenAPI types are up to date
+        run: npm run generate:types:check
+
       - name: Build Shared Package (@stellar-alerts/shared)
         run: npx tsc -p packages/shared/tsconfig.json
 
@@ -33,11 +45,64 @@ jobs:
       - name: Typecheck Frontend (apps/web)
         run: npx tsc -p apps/web/tsconfig.json --noEmit
 
-      - name: Run Vitest Unit Tests
+      - name: Run API Unit Tests
         run: npm run test:api
+
+      - name: Run Web Lint
+        run: npm run lint --workspace=web
+
+      - name: Run Web Unit Tests
+        run: npm run test --workspace=web
 
       - name: Build Web Application
         run: npm run build --workspace=web
         env:
           NEXTAUTH_SECRET: "ci-build-dummy-secret-key-12345"
           NEXT_PUBLIC_API_URL: "http://localhost:3001"
+
+  chaos:
+    name: Chaos Engineering Fault Injection Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # docker-compose.yml runs toxiproxy with network_mode: host, which is
+      # Linux-only — exactly what ubuntu-latest runners are, so this needs
+      # no extra host-gateway wiring (the chaos suite's own fixture server
+      # binds to 127.0.0.1, directly reachable from the toxiproxy container).
+      - name: Start Toxiproxy
+        run: docker compose up -d toxiproxy
+
+      - name: Wait for Toxiproxy to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8474/version > /dev/null; then
+              echo "Toxiproxy is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Toxiproxy did not become ready in time" >&2
+          docker compose logs toxiproxy
+          exit 1
+
+      - name: Run Chaos Test Suite
+        working-directory: apps/api
+        run: npx --no-install vitest run src/__tests__/chaos.test.ts
+        env:
+          TOXIPROXY_URL: http://localhost:8474
+
+      - name: Stop Toxiproxy
+        if: always()
+        run: docker compose down toxiproxy

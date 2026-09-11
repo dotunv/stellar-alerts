@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 
-export function WatcherForm() {
+export function WatcherForm({ onWalletAdded }: { onWalletAdded?: () => void }) {
   const [address, setAddress] = useState('');
   const [status, setStatus] = useState<string | null>(null);
   const { data: session } = useSession();
@@ -12,7 +12,8 @@ export function WatcherForm() {
     e.preventDefault();
     setStatus('Submitting...');
     
-    if (!session || !(session as any).accessToken) {
+    const accessToken = (session as (typeof session & { accessToken?: string }) | null)?.accessToken;
+    if (!accessToken) {
       setStatus('Error: You must be logged in.');
       return;
     }
@@ -22,7 +23,7 @@ export function WatcherForm() {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(session as any).accessToken}`
+          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify({ publicKey: address, label: 'Watched Wallet' })
       });
@@ -31,6 +32,7 @@ export function WatcherForm() {
       if (res.ok && data.success) {
         setStatus('Successfully submitted!');
         setAddress('');
+        if (onWalletAdded) onWalletAdded();
       } else {
         setStatus(`Error: ${data.error || 'Failed to submit'}`);
       }

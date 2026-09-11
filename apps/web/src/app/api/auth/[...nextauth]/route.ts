@@ -1,6 +1,8 @@
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 
+type AuthUser = { accessToken?: string; id: string; name?: string | null; email?: string | null };
+
 const nextAuthSecret = process.env.NEXTAUTH_SECRET || "development-fallback-secret-key-12345";
 
 const handler = NextAuth({
@@ -19,7 +21,7 @@ const handler = NextAuth({
           const data = await res.json();
 
           if (data.success && data.token && data.user) {
-            return { id: data.user.id, name: data.user.email, email: data.user.email, accessToken: data.token };
+            return { id: data.user.id, name: data.user.email, email: data.user.email, accessToken: data.token } as AuthUser;
           }
         } catch (e) {
           console.error('API Verification error', e);
@@ -37,16 +39,16 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.accessToken = (user as any).accessToken;
+        token.accessToken = (user as AuthUser).accessToken;
         token.id = user.id;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
-        (session as any).accessToken = token.accessToken;
+        (session as typeof session & { accessToken?: string }).accessToken = token.accessToken as string | undefined;
         if (session.user) {
-          (session.user as any).id = token.id as string;
+          (session.user as typeof session.user & { id?: string }).id = token.id as string;
         }
       }
       return session;

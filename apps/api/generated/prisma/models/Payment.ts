@@ -41,6 +41,7 @@ export type PaymentMinAggregateOutputType = {
   fromAddress: string | null
   amount: runtime.Decimal | null
   asset: string | null
+  assetIssuer: string | null
   memo: string | null
   receivedAt: Date | null
   createdAt: Date | null
@@ -53,6 +54,7 @@ export type PaymentMaxAggregateOutputType = {
   fromAddress: string | null
   amount: runtime.Decimal | null
   asset: string | null
+  assetIssuer: string | null
   memo: string | null
   receivedAt: Date | null
   createdAt: Date | null
@@ -65,6 +67,7 @@ export type PaymentCountAggregateOutputType = {
   fromAddress: number
   amount: number
   asset: number
+  assetIssuer: number
   memo: number
   receivedAt: number
   createdAt: number
@@ -87,6 +90,7 @@ export type PaymentMinAggregateInputType = {
   fromAddress?: true
   amount?: true
   asset?: true
+  assetIssuer?: true
   memo?: true
   receivedAt?: true
   createdAt?: true
@@ -99,6 +103,7 @@ export type PaymentMaxAggregateInputType = {
   fromAddress?: true
   amount?: true
   asset?: true
+  assetIssuer?: true
   memo?: true
   receivedAt?: true
   createdAt?: true
@@ -111,6 +116,7 @@ export type PaymentCountAggregateInputType = {
   fromAddress?: true
   amount?: true
   asset?: true
+  assetIssuer?: true
   memo?: true
   receivedAt?: true
   createdAt?: true
@@ -210,6 +216,7 @@ export type PaymentGroupByOutputType = {
   fromAddress: string
   amount: runtime.Decimal
   asset: string
+  assetIssuer: string | null
   memo: string | null
   receivedAt: Date
   createdAt: Date
@@ -245,6 +252,7 @@ export type PaymentWhereInput = {
   fromAddress?: Prisma.StringFilter<"Payment"> | string
   amount?: Prisma.DecimalFilter<"Payment"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   asset?: Prisma.StringFilter<"Payment"> | string
+  assetIssuer?: Prisma.StringNullableFilter<"Payment"> | string | null
   memo?: Prisma.StringNullableFilter<"Payment"> | string | null
   receivedAt?: Prisma.DateTimeFilter<"Payment"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"Payment"> | Date | string
@@ -258,6 +266,7 @@ export type PaymentOrderByWithRelationInput = {
   fromAddress?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   asset?: Prisma.SortOrder
+  assetIssuer?: Prisma.SortOrderInput | Prisma.SortOrder
   memo?: Prisma.SortOrderInput | Prisma.SortOrder
   receivedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -274,6 +283,7 @@ export type PaymentWhereUniqueInput = Prisma.AtLeast<{
   fromAddress?: Prisma.StringFilter<"Payment"> | string
   amount?: Prisma.DecimalFilter<"Payment"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   asset?: Prisma.StringFilter<"Payment"> | string
+  assetIssuer?: Prisma.StringNullableFilter<"Payment"> | string | null
   memo?: Prisma.StringNullableFilter<"Payment"> | string | null
   receivedAt?: Prisma.DateTimeFilter<"Payment"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"Payment"> | Date | string
@@ -287,6 +297,7 @@ export type PaymentOrderByWithAggregationInput = {
   fromAddress?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   asset?: Prisma.SortOrder
+  assetIssuer?: Prisma.SortOrderInput | Prisma.SortOrder
   memo?: Prisma.SortOrderInput | Prisma.SortOrder
   receivedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -307,6 +318,7 @@ export type PaymentScalarWhereWithAggregatesInput = {
   fromAddress?: Prisma.StringWithAggregatesFilter<"Payment"> | string
   amount?: Prisma.DecimalWithAggregatesFilter<"Payment"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   asset?: Prisma.StringWithAggregatesFilter<"Payment"> | string
+  assetIssuer?: Prisma.StringNullableWithAggregatesFilter<"Payment"> | string | null
   memo?: Prisma.StringNullableWithAggregatesFilter<"Payment"> | string | null
   receivedAt?: Prisma.DateTimeWithAggregatesFilter<"Payment"> | Date | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Payment"> | Date | string
@@ -318,6 +330,7 @@ export type PaymentCreateInput = {
   fromAddress: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   asset: string
+  assetIssuer?: string | null
   memo?: string | null
   receivedAt: Date | string
   createdAt?: Date | string
@@ -331,6 +344,7 @@ export type PaymentUncheckedCreateInput = {
   fromAddress: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   asset: string
+  assetIssuer?: string | null
   memo?: string | null
   receivedAt: Date | string
   createdAt?: Date | string
@@ -342,6 +356,7 @@ export type PaymentUpdateInput = {
   fromAddress?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   asset?: Prisma.StringFieldUpdateOperationsInput | string
+  assetIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   memo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receivedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -355,6 +370,7 @@ export type PaymentUncheckedUpdateInput = {
   fromAddress?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   asset?: Prisma.StringFieldUpdateOperationsInput | string
+  assetIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   memo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receivedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -367,6 +383,7 @@ export type PaymentCreateManyInput = {
   fromAddress: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   asset: string
+  assetIssuer?: string | null
   memo?: string | null
   receivedAt: Date | string
   createdAt?: Date | string
@@ -378,6 +395,7 @@ export type PaymentUpdateManyMutationInput = {
   fromAddress?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   asset?: Prisma.StringFieldUpdateOperationsInput | string
+  assetIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   memo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receivedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -390,6 +408,7 @@ export type PaymentUncheckedUpdateManyInput = {
   fromAddress?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   asset?: Prisma.StringFieldUpdateOperationsInput | string
+  assetIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   memo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receivedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -412,6 +431,7 @@ export type PaymentCountOrderByAggregateInput = {
   fromAddress?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   asset?: Prisma.SortOrder
+  assetIssuer?: Prisma.SortOrder
   memo?: Prisma.SortOrder
   receivedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -428,6 +448,7 @@ export type PaymentMaxOrderByAggregateInput = {
   fromAddress?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   asset?: Prisma.SortOrder
+  assetIssuer?: Prisma.SortOrder
   memo?: Prisma.SortOrder
   receivedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -440,6 +461,7 @@ export type PaymentMinOrderByAggregateInput = {
   fromAddress?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   asset?: Prisma.SortOrder
+  assetIssuer?: Prisma.SortOrder
   memo?: Prisma.SortOrder
   receivedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -505,6 +527,7 @@ export type PaymentCreateWithoutWalletInput = {
   fromAddress: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   asset: string
+  assetIssuer?: string | null
   memo?: string | null
   receivedAt: Date | string
   createdAt?: Date | string
@@ -516,6 +539,7 @@ export type PaymentUncheckedCreateWithoutWalletInput = {
   fromAddress: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   asset: string
+  assetIssuer?: string | null
   memo?: string | null
   receivedAt: Date | string
   createdAt?: Date | string
@@ -557,6 +581,7 @@ export type PaymentScalarWhereInput = {
   fromAddress?: Prisma.StringFilter<"Payment"> | string
   amount?: Prisma.DecimalFilter<"Payment"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   asset?: Prisma.StringFilter<"Payment"> | string
+  assetIssuer?: Prisma.StringNullableFilter<"Payment"> | string | null
   memo?: Prisma.StringNullableFilter<"Payment"> | string | null
   receivedAt?: Prisma.DateTimeFilter<"Payment"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"Payment"> | Date | string
@@ -568,6 +593,7 @@ export type PaymentCreateManyWalletInput = {
   fromAddress: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   asset: string
+  assetIssuer?: string | null
   memo?: string | null
   receivedAt: Date | string
   createdAt?: Date | string
@@ -579,6 +605,7 @@ export type PaymentUpdateWithoutWalletInput = {
   fromAddress?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   asset?: Prisma.StringFieldUpdateOperationsInput | string
+  assetIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   memo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receivedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -590,6 +617,7 @@ export type PaymentUncheckedUpdateWithoutWalletInput = {
   fromAddress?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   asset?: Prisma.StringFieldUpdateOperationsInput | string
+  assetIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   memo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receivedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -601,6 +629,7 @@ export type PaymentUncheckedUpdateManyWithoutWalletInput = {
   fromAddress?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   asset?: Prisma.StringFieldUpdateOperationsInput | string
+  assetIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   memo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receivedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -615,6 +644,7 @@ export type PaymentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   fromAddress?: boolean
   amount?: boolean
   asset?: boolean
+  assetIssuer?: boolean
   memo?: boolean
   receivedAt?: boolean
   createdAt?: boolean
@@ -628,6 +658,7 @@ export type PaymentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   fromAddress?: boolean
   amount?: boolean
   asset?: boolean
+  assetIssuer?: boolean
   memo?: boolean
   receivedAt?: boolean
   createdAt?: boolean
@@ -641,6 +672,7 @@ export type PaymentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   fromAddress?: boolean
   amount?: boolean
   asset?: boolean
+  assetIssuer?: boolean
   memo?: boolean
   receivedAt?: boolean
   createdAt?: boolean
@@ -654,12 +686,13 @@ export type PaymentSelectScalar = {
   fromAddress?: boolean
   amount?: boolean
   asset?: boolean
+  assetIssuer?: boolean
   memo?: boolean
   receivedAt?: boolean
   createdAt?: boolean
 }
 
-export type PaymentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "walletId" | "txHash" | "fromAddress" | "amount" | "asset" | "memo" | "receivedAt" | "createdAt", ExtArgs["result"]["payment"]>
+export type PaymentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "walletId" | "txHash" | "fromAddress" | "amount" | "asset" | "assetIssuer" | "memo" | "receivedAt" | "createdAt", ExtArgs["result"]["payment"]>
 export type PaymentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   wallet?: boolean | Prisma.WalletDefaultArgs<ExtArgs>
 }
@@ -682,6 +715,7 @@ export type $PaymentPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     fromAddress: string
     amount: runtime.Decimal
     asset: string
+    assetIssuer: string | null
     memo: string | null
     receivedAt: Date
     createdAt: Date
@@ -1115,6 +1149,7 @@ export interface PaymentFieldRefs {
   readonly fromAddress: Prisma.FieldRef<"Payment", 'String'>
   readonly amount: Prisma.FieldRef<"Payment", 'Decimal'>
   readonly asset: Prisma.FieldRef<"Payment", 'String'>
+  readonly assetIssuer: Prisma.FieldRef<"Payment", 'String'>
   readonly memo: Prisma.FieldRef<"Payment", 'String'>
   readonly receivedAt: Prisma.FieldRef<"Payment", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"Payment", 'DateTime'>

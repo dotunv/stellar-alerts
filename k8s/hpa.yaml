@@ -1,0 +1,94 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: stellar-alerts-worker-hpa
+  namespace: stellar-alerts
+  labels:
+    app.kubernetes.io/name: stellar-alerts
+    app.kubernetes.io/component: worker
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: stellar-alerts-worker
+  minReplicas: 2
+  maxReplicas: 20
+  metrics:
+    # Scale based on custom Prometheus queue depth (waiting jobs)
+    - type: External
+      external:
+        metric:
+          name: stellar_alerts_queue_waiting_jobs
+          selector:
+            matchLabels:
+              queue: webhooks
+        target:
+          type: Value
+          averageValue: "50"
+    # Secondary CPU utilization trigger
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75
+    # Secondary Memory utilization trigger
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 15
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 4
+          periodSeconds: 15
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60
+      selectPolicy: Min
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stellar-alerts-worker
+  namespace: stellar-alerts
+  labels:
+    app: stellar-alerts-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: stellar-alerts-worker
+  template:
+    metadata:
+      labels:
+        app: stellar-alerts-worker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3001"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: worker
+          image: stellar-alerts/worker:latest
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          ports:
+            - containerPort: 3001
+              name: metrics

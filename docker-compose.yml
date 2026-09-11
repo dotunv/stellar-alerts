@@ -29,5 +29,26 @@ services:
       timeout: 5s
       retries: 5
 
+  # Chaos-engineering fault injection proxy (#145). The API test suite spins
+  # up its own local fixture server on an ephemeral port and talks to it
+  # *through* toxiproxy so tests can inject deterministic latency/timeouts/
+  # disconnects — see apps/api/src/__tests__/chaos.test.ts. Not used at
+  # runtime by the app itself, only by the chaos test suite (gated on
+  # TOXIPROXY_URL).
+  #
+  # Uses host networking so toxiproxy can reach whatever ephemeral port the
+  # test process's fixture server bound to on localhost, without needing to
+  # pre-declare/pass that port into the container. This is Linux-only
+  # (matches the ubuntu-latest CI runner this is primarily meant for); on
+  # macOS/Windows Docker Desktop, run toxiproxy directly on the host instead
+  # (`docker run --network host ghcr.io/shopify/toxiproxy:latest` won't work
+  # there either — use `-p 8474:8474 -p 8666:8666` and point
+  # TOXIPROXY_UPSTREAM_HOST at host.docker.internal).
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:latest
+    container_name: stellar_alerts_toxiproxy
+    restart: unless-stopped
+    network_mode: host
+
 volumes:
   postgres_data:

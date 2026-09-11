@@ -10,12 +10,21 @@ export class WalletsController {
     }
 
     const userId = (request as any).user.id;
-    const wallet = await walletsService.addWallet(
-      userId,
-      parsed.data.publicKey,
-      parsed.data.label
-    );
-    return reply.status(201).send({ success: true, wallet });
+    try {
+      const wallet = await walletsService.addWallet(
+        userId,
+        parsed.data.publicKey,
+        parsed.data.label,
+        parsed.data.zkProof,
+        parsed.data.publicSignals
+      );
+      return reply.status(201).send({ success: true, wallet });
+    } catch (error: any) {
+      if (error.message === 'Invalid ZK proof') {
+        return reply.status(400).send({ error: 'Invalid ZK proof' });
+      }
+      throw error;
+    }
   }
 
   async getWallets(request: FastifyRequest, reply: FastifyReply) {
