@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
+  DATABASE_REPLICA_URL: z.string().url().optional(),
   TELEGRAM_BOT_TOKEN: z.string().min(1),
   JWT_SECRET: z.string().min(1),
   REDIS_URL: z.string().url(),
