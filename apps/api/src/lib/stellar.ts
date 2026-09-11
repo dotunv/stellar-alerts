@@ -4,6 +4,13 @@ const server = new StellarSdk.Horizon.Server('https://horizon-testnet.stellar.or
 
 export const STROOPS_PER_UNIT = 10_000_000;
 
+function logPaymentsError(publicKey: string, error: any) {
+  console.error(
+    `[Stellar] Error fetching payments for ${publicKey.substring(0, 8)}...:`,
+    error?.message ?? error
+  );
+}
+
 export interface DecodedStellarAsset {
   assetCode: string;
   assetIssuer: string | null;

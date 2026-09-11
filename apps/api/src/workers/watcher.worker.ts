@@ -154,7 +154,7 @@ export async function processPaymentRecord(
 const CURSOR_PAGE_SIZE = 50;
 
 // Upper bound on pages walked in a single catch-up pass, so a long outage
-// cannot stall the poll loop indefinitely
+// cannot stall the catch-up run indefinitely
 const MAX_CATCHUP_PAGES = 20;
 
 export async function saveCursor(walletId: string, pagingToken: string) {
@@ -273,6 +273,94 @@ export async function startHorizonSSEStream(wallet: { id: string; publicKey: str
     clearTimeout(timeoutId!);
     return null;
   }
+
+  const connector: StreamConnector =
+    options.connector ??
+    ((cursor, handlers) => openPaymentStream(wallet.publicKey, cursor, handlers));
+
+  const reconnectDelayMs = options.reconnectDelayMs ?? DEFAULT_RECONNECT_DELAY_MS;
+  const maxReconnectAttempts = options.maxReconnectAttempts ?? Infinity;
+  const autoReconnect = options.autoReconnect ?? true;
+
+  let lastCursor = await ensureCursor(wallet);
+  let closedByCaller = false;
+  let closeCurrent: (() => void) | null = null;
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  let attempts = 0;
+
+  const clearReconnectTimer = () => {
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+  };
+
+  const scheduleReconnect = () => {
+    if (closedByCaller || !autoReconnect) return;
+    if (attempts >= maxReconnectAttempts) {
+      console.error(
+        `[WatcherStream] ⛔ Max SSE reconnect attempts (${maxReconnectAttempts}) reached for wallet ${wallet.publicKey.substring(0, 8)}...`
+      );
+      return;
+    }
+    const backoff = Math.min(reconnectDelayMs * 2 ** (attempts - 1), MAX_RECONNECT_BACKOFF_MS);
+    console.warn(
+      `[WatcherStream] 🔌 Reconnecting SSE stream for ${wallet.publicKey.substring(0, 8)}... in ${backoff}ms (attempt ${attempts + 1})`
+    );
+    clearReconnectTimer();
+    reconnectTimer = setTimeout(open, backoff);
+  };
+
+  const open = () => {
+    if (closedByCaller) return;
+    attempts += 1;
+
+    closeCurrent = connector(lastCursor, {
+      onmessage: async (record: any) => {
+        await handleStreamRecord(wallet, record);
+        if (record.paging_token) {
+          lastCursor = record.paging_token;
+        }
+      },
+      onerror: (error: any) => {
+        console.error(
+          `[WatcherStream] ⚠️ SSE stream error for ${wallet.publicKey.substring(0, 8)}...:`,
+          error?.message ?? error
+        );
+        // Tear down the (possibly half-open) connection before reconnecting so
+        // we never end up with two overlapping streams.
+        if (closeCurrent) {
+          try {
+            closeCurrent();
+          } catch {
+            /* ignore */
+          }
+          closeCurrent = null;
+        }
+        scheduleReconnect();
+      },
+    });
+  };
+
+  const close = () => {
+    closedByCaller = true;
+    clearReconnectTimer();
+    if (closeCurrent) {
+      try {
+        closeCurrent();
+      } catch {
+        /* ignore */
+      }
+      closeCurrent = null;
+    }
+  };
+
+  console.log(
+    `[WatcherWorker] 📡 Opening Horizon SSE payment stream for wallet ${wallet.publicKey.substring(0, 8)}... (cursor ${lastCursor})`
+  );
+  open();
+
+  return close;
 }
 
 /**
