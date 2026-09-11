@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { createWebhookSchema, webhookParamsSchema } from './webhooks.schema';
 import { webhooksService } from './webhooks.service';
+import { decryptSecret } from '../../utils/crypto-vault';
 
 export class WebhooksController {
   async addWebhook(request: FastifyRequest, reply: FastifyReply) {
@@ -11,13 +12,22 @@ export class WebhooksController {
 
     const userId = (request as any).user.id;
     const webhook = await webhooksService.addWebhook(userId, parsed.data.url, parsed.data.payloadTemplate);
+    if (webhook && webhook.secret) {
+      webhook.secret = decryptSecret(webhook.secret);
+    }
     return reply.status(201).send({ success: true, webhook });
   }
 
   async getWebhooks(request: FastifyRequest, reply: FastifyReply) {
     const userId = (request as any).user.id;
     const webhooks = await webhooksService.getWebhooks(userId);
-    return reply.send({ success: true, webhooks });
+    const decryptedWebhooks = webhooks.map((webhook: any) => {
+      if (webhook && webhook.secret) {
+        webhook.secret = decryptSecret(webhook.secret);
+      }
+      return webhook;
+    });
+    return reply.send({ success: true, webhooks: decryptedWebhooks });
   }
 
   async deleteWebhook(request: FastifyRequest, reply: FastifyReply) {
